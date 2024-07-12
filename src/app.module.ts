@@ -12,26 +12,26 @@ import { TransactionModule } from './transaction/transaction.module';
 import { WalletModule } from './wallet/wallet.module';
 import { HDWalletModule } from './_core/hdwallet/hdwallet.module';
 @Module({
-  imports: [    
-    ConfigModule.forRoot({
-      load: [configuration],
-      isGlobal: true,
-    }),
-    DefaultLoggerModule,
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGO_PATH'),
-      }),
-      inject: [ConfigService],
-    }),
-    ScheduleModule.forRoot(),
-    BlockModule,
-    WalletModule,
-    TransactionModule,
-    HDWalletModule
-  ],
-  controllers: [],
-  providers: [AppService, AppTasksService],
+    imports: [
+        ConfigModule.forRoot({
+            load: [configuration],
+            isGlobal: true,
+        }),
+        DefaultLoggerModule,
+        MongooseModule.forRootAsync({
+            imports: [ConfigModule],
+            useFactory: async (configService: ConfigService) => ({
+                uri: configService.get<string>('MONGO_PATH'),
+            }),
+            inject: [ConfigService],
+        }),
+        ScheduleModule.forRoot(),
+        BlockModule,
+        WalletModule,
+        TransactionModule,
+        HDWalletModule
+    ],
+    controllers: [],
+    providers: [AppService, AppTasksService],
 })
-export class AppModule {}
+export class AppModule { }

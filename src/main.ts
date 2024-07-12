@@ -5,25 +5,25 @@ import * as bodyParser from 'body-parser';
 import { startMicroservices } from './_microservices/microservice.manager';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    bufferLogs: true,
-  });
-  app.useLogger(app.get(DefaultLoggerService));
+    const app = await NestFactory.create(AppModule, {
+        bufferLogs: true,
+    });
+    app.useLogger(app.get(DefaultLoggerService));
 
-  app.use(bodyParser.json({ limit: '5mb' }));
-  app.use(bodyParser.urlencoded({ limit: '5mb', extended: true }));
+    app.use(bodyParser.json({ limit: '5mb' }));
+    app.use(bodyParser.urlencoded({ limit: '5mb', extended: true }));
 
-  app.enableCors({ 
-    origin: "*",
-  })
+    app.enableCors({
+        origin: "*",
+    })
 
-  app.setGlobalPrefix("api/v1/");
+    app.setGlobalPrefix("api/v1/");
 
-  console.log("apiport:" + 3012)
-  await app.listen(3012);
+    console.log("apiport:" + 3012)
+    await app.listen(3012);
 
-  startMicroservices();
-  console.log("blocklistener started.");
+    startMicroservices();
+    console.log("blocklistener started.");
 
 }
 bootstrap();
