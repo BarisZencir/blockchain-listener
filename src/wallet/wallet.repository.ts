@@ -13,11 +13,21 @@ export class WalletsRepository extends Repository<Wallet, WalletDocument>{
         super(mongoModel);
     }
 
-    async findNextFreeAddress(blockchainName : BlockchainName) : Promise<Wallet> {
+    async findNextFreeAddress(blockchainName : Wallet["blockchainName"]) : Promise<Wallet> {
+        //note bu kod yanlis. findone kullanmadan yap. sanirim db'den sirayla cektigi icin sorun olmadi.
         return this.mongoModel.findOne({ 
             blockchainName : blockchainName,
             available: true })
         .sort({ index: 1 })
         .lean();
     }
+
+    async findByAddress(blockchainName: Wallet["blockchainName"], address: Wallet["address"]): Promise<Wallet> {
+        return this.mongoModel.findOne({ 
+            blockchainName: blockchainName,
+            address: { $regex: new RegExp(`^${address}$`, 'i') } // Case insensitive search
+        })
+        .lean();
+    }
+
 }

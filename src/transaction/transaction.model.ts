@@ -30,13 +30,13 @@ export class Transaction extends BaseModel {
 	tokenName: string;
 
 	@Prop()
-	txHash: string;
+	hash: string;
 
 	@Prop()
-	txData: string;
+	data: string;
 
 	@Prop()
-	txError: string;
+	error: string;
 
 	@Prop()
 	from: string;
@@ -52,13 +52,13 @@ export class Transaction extends BaseModel {
 	fee: string; // kusurat cok napalim, string tuttum ama sorun bu. 
 
 	@Prop()
-	requestedBlockNumber: number;
+	requestedBlockNumber: string;
 
 	@Prop()
-	processedBlockNumber: number;
+	processedBlockNumber: string;
 
 	@Prop()
-	complatedBlockNumber: number;
+	complatedBlockNumber: string;
 	
 }
 

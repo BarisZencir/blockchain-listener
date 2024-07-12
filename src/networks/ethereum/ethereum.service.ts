@@ -1,19 +1,177 @@
+'use strict';
+
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BlockchainName } from 'src/_common/enums/blockchain.name.enums';
+import { WalletService } from 'src/wallet/wallet.service';
 
+import _ from 'lodash';
+import BigNumber from "bignumber.js";
+import * as ethUtil from 'ethereumjs-util';
+import { Transaction as EthereumTx } from 'ethereumjs-tx';
+import Web3 from 'web3';
+import { Transaction } from 'ethereumjs-tx';
+import Common from 'ethereumjs-common';
+
+function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+type Settings = {
+    ws: string;
+    chainId : number,
+    networkId : number
+};
 
 @Injectable()
 export class EthereumService implements OnModuleInit {
-	private readonly logger = new Logger(EthereumService.name);
+	protected readonly logger = new Logger(EthereumService.name);
 
+	protected web3: Web3 | null;
+	protected settings: Settings | null;
+	
 	constructor(
-		private configService: ConfigService,
-	) { }
+		protected configService: ConfigService,
+		protected walletService: WalletService,
 
+	) {
+		this.web3 = null;
+        
+		this.settings = {
+            ws : this.configService.get<string>("network.ethereum.ws"),
+            chainId : this.configService.get<number>("network.ethereum.chainId"),
+            networkId : this.configService.get<number>("network.ethereum.networkId")
+        }
+	}
 
 	async onModuleInit(): Promise<void> {
 		
+		await this.connect();
+        // let isConnected = await this.isConnected();
+        // console.log("isConnected: " + isConnected);
+
+        // let blockNumber = await this.getBlockNumber();
+        // console.log("blockNumber: " + blockNumber);
+
+        // let block = await this.getBlock(Number(blockNumber));
+        // console.log("block: " + block);
+
+        // let balance = await this.getBalance("0x7a19821b82165c5e0cc3ce54cdef03d0a1328556");
+        // console.log("balance: " + balance);
+
+        // let tx = await this.sendRawTransaction(
+        //     "0x7a19821b82165c5e0cc3ce54cdef03d0a1328556", 
+        //     "0xb9d1EC049d114fc42AAb60A36D49282ee1D69679",
+        //     "123",
+        //     "0xe6bf150b27a8a3f60e3a1722dba3444f812f656507c0e50c1d013d09825850ef"
+        // );
+
+        // console.log("tx: " + tx);
+
+        // tx = await this.getTransaction(tx.hash);
+        // console.log("tx: " + tx);
+
+        // await sleep(1000 * 60);
+
+        // balance = await this.getBalance("0xb9d1EC049d114fc42AAb60A36D49282ee1D69679");
+        // console.log("balance(acc 2): " + balance);
 	}
+
+    private async checkAndTryConnection(): Promise<void> {
+        if (!this.isConnected()) {
+            await this.connect();
+        }
+    }
+
+    async connect(): Promise<boolean> {
+
+        if (this.settings) {
+            this.web3 = new Web3(new Web3.providers.HttpProvider(this.settings.ws));
+
+            if (this.web3) {
+                const isListening = await this.web3.eth.net.isListening();
+                if (isListening) {
+                    console.log('Ethereum Network connection successful.');
+                    return true;
+                } else {
+                    this.web3 = null;
+                    throw new Error('Cannot listen to Ethereum Network Provider.');
+                }
+            } else {
+                this.web3 = null;
+                throw new Error('Cannot connect to provider.');
+            }    
+        } else {
+            throw new Error('Network Error. There is no connection to provider.');
+        }
+    }
+
+	async isConnected(): Promise<boolean> {
+		if (this.web3 === null) {
+			return false;
+		}
+		try {
+			return await this.web3.eth.net.isListening();
+		} catch {
+			return false;
+		}
+	}
+
+    async getBlockNumber(): Promise<BigNumber> {
+        await this.checkAndTryConnection();
+        return BigNumber((await this.web3!.eth.getBlockNumber()).toString());
+    }
+
+    async getBlock(blockNumber: BigNumber): Promise<any> {
+        await this.checkAndTryConnection();
+        return this.web3!.eth.getBlock(blockNumber.toString());
+    }
+
+    async getBalance(address: string): Promise<BigNumber> {
+        await this.checkAndTryConnection();
+        return BigNumber((await this.web3!.eth.getBalance(address)).toString());		
+    }
+
+    async sendRawTransaction(from: string, to: string, amount: string, privateKey: string): Promise<any> {
+        await this.checkAndTryConnection();
+
+        const txCount = await this.web3!.eth.getTransactionCount(from);
+		let value = this.web3!.utils.numberToHex(this.web3!.utils.toWei(amount, 'ether'));
+        const txData = {
+            nonce: this.web3!.utils.numberToHex(txCount),
+            gasLimit: this.web3!.utils.numberToHex(21000),
+            gasPrice: this.web3!.utils.numberToHex(this.web3!.utils.toWei('10', 'gwei')),
+            to: to,
+            value: value,
+            chainId: this.settings.chainId
+        };
+
+        const common = Common.forCustomChain('mainnet', { 
+            name: 'custom',
+            networkId: this.settings.networkId,
+            chainId: this.settings.chainId
+        }, 'petersburg');
+
+        const tx = new Transaction(txData, { common });
+
+        tx.sign(ethUtil.toBuffer(privateKey));
+
+        const serializedTx = tx.serialize();
+        const rawTx = '0x' + serializedTx.toString('hex');
+
+        const txResponse = await this.web3!.eth.sendSignedTransaction(rawTx);
+        const txResult = await this.getTransaction(txResponse.transactionHash.toString());
+        return txResult;
+    }
+
+    async getTransaction(transactionHash: string): Promise<any> {
+        await this.checkAndTryConnection();
+        return this.web3!.eth.getTransaction(transactionHash);
+    }
+
+
+    //##############################################################
+    //                 WALLET KULLANAN SERVISLER
+    //##############################################################
 
 }

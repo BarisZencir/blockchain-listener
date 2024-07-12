@@ -18,4 +18,8 @@ export class TransactionService extends Service<Transaction, TransactionDocument
     async onModuleInit() : Promise<void> {
     }
 
+    async findByTxHash(blockchainName : Transaction["blockchainName"], hash: Transaction["hash"]) : Promise<Transaction> {
+        return this.repository.findByTxHash(blockchainName, hash);
+    }
+
 }

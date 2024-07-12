@@ -8,5 +8,6 @@ export enum TransactionState {
 
 export enum TransactionType {
     WITHDRAW = "WITHDRAW",
-    DEPOSITE = "DEPOSITE"
+    VIRMAN = "VIRMAN",
+    DEPOSIT = "DEPOSIT"
 }

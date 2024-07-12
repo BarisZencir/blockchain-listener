@@ -18,23 +18,12 @@ export class HDWalletService implements OnModuleInit {
 	generateAddresses(blockchainName: BlockchainName, mnemonic : string, numberOfAddresses: number) : IAddressResult[] {
 
 		if(blockchainName == BlockchainName.BITCOIN) {
-			throw Error("required init.");
-			return;
-		}
-
-		if(blockchainName == BlockchainName.BITCOIN_TEST) {
 			return (new BitcoinHDWallet(mnemonic, {
 				derivePath: "m/44'/0'/0'/0"
 			})).generateAddresses(numberOfAddresses);
 		}
 
 		if(blockchainName == BlockchainName.ETHEREUM) {
-
-			throw Error("required init.");
-			return;
-		}
-
-		if(blockchainName == BlockchainName.ETHEREUM_TEST) {
 
 			return (new EthereumHDWallet(mnemonic, {
 				derivePath: "44'/60'/0'/0"

@@ -13,8 +13,8 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletsReposi
     private readonly logger = new Logger(WalletService.name);
 
     private availableWalletAddresses : {
-        [BlockchainName.BITCOIN_TEST] : Wallet["address"][],
-        [BlockchainName.ETHEREUM_TEST] : Wallet["address"][],
+        [BlockchainName.BITCOIN] : Wallet["address"][],
+        [BlockchainName.ETHEREUM] : Wallet["address"][],
     }
 
     constructor(
@@ -31,7 +31,7 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletsReposi
 
         let walletList = Array<Wallet>();
 
-        let isExistsBTCAddresses = await this.repository.exists({blockchainName : BlockchainName.BITCOIN_TEST});
+        let isExistsBTCAddresses = await this.repository.exists({blockchainName : BlockchainName.BITCOIN});
         if(!isExistsBTCAddresses) {
 
             if(numberOfAddresses <= 0) {
@@ -41,10 +41,10 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletsReposi
             //burada default init.
             mnemonic = this.configService.get<string>("HOT_WALLET_BTC_MNEMONIC");
             if('undefined' != typeof mnemonic) {
-                let addresses = this.hdWalletService.generateAddresses(BlockchainName.BITCOIN_TEST, mnemonic, numberOfAddresses);
+                let addresses = this.hdWalletService.generateAddresses(BlockchainName.BITCOIN, mnemonic, numberOfAddresses);
                 addresses.forEach(address => {
                     let wallet = new Wallet();
-                    wallet.blockchainName = BlockchainName.BITCOIN_TEST;
+                    wallet.blockchainName = BlockchainName.BITCOIN;
                     wallet.index = address.index;
                     wallet.nonce = 0;
                     wallet.privateKey = address.privateKey;
@@ -61,7 +61,7 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletsReposi
             }
         }
         
-        let isExistsETHAddresses = await this.repository.exists({blockchainName : BlockchainName.ETHEREUM_TEST});
+        let isExistsETHAddresses = await this.repository.exists({blockchainName : BlockchainName.ETHEREUM});
         if(!isExistsETHAddresses) {
 
             if(numberOfAddresses <= 0) {
@@ -71,10 +71,10 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletsReposi
             //burada default init.
             mnemonic = this.configService.get<string>("HOT_WALLET_ETH_MNEMONIC");
             if('undefined' != typeof mnemonic) {
-                let addresses = this.hdWalletService.generateAddresses(BlockchainName.ETHEREUM_TEST, mnemonic, numberOfAddresses);
+                let addresses = this.hdWalletService.generateAddresses(BlockchainName.ETHEREUM, mnemonic, numberOfAddresses);
                 addresses.forEach(address => {
                     let wallet = new Wallet();
-                    wallet.blockchainName = BlockchainName.ETHEREUM_TEST;
+                    wallet.blockchainName = BlockchainName.ETHEREUM;
                     wallet.index = address.index;
                     wallet.nonce = 0;
                     wallet.privateKey = address.privateKey;
@@ -100,23 +100,23 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletsReposi
         }
 
         let availableBTCWallets = await this.repository.find({
-            blockchainName : BlockchainName.BITCOIN_TEST,
+            blockchainName : BlockchainName.BITCOIN,
             available : true
         });
 
         let availableETHWallets = await this.repository.find({
-            blockchainName : BlockchainName.ETHEREUM_TEST,
+            blockchainName : BlockchainName.ETHEREUM,
             available : true
         });
 
         // this.availableWalletAddresses = {
-        //     BITCOIN_TEST  : new Array<Wallet["address"]>(),
-        //     ETHEREUM_TEST : new Array<Wallet["address"]>()
+        //     BITCOIN  : new Array<Wallet["address"]>(),
+        //     ETHEREUM : new Array<Wallet["address"]>()
         // }
 
         this.availableWalletAddresses = {
-            BITCOIN_TEST  : availableBTCWallets.map(wallet => wallet.address),
-            ETHEREUM_TEST : availableETHWallets.map(wallet => wallet.address)
+            BITCOIN  : availableBTCWallets.map(wallet => wallet.address),
+            ETHEREUM : availableETHWallets.map(wallet => wallet.address)
         }
 
     }
@@ -144,5 +144,10 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletsReposi
         return this.repository.findNextFreeAddress(blockchainName);
 
     }
+
+    async findByAddress(blockchainName : Wallet["blockchainName"], address: Wallet["address"]) : Promise<Wallet> {
+        return this.repository.findByAddress(blockchainName, address);
+    }
+
 
 }

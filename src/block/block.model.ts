@@ -11,7 +11,7 @@ export class Block extends BaseModel {
 	blockchainName: string;
 
 	@Prop()
-	blockNumber: number;
+	blockNumber: string;
 }
 
 export const BlockSchema = createSchema(Block);

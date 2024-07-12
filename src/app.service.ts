@@ -40,7 +40,7 @@ export class AppService implements OnModuleInit {
         // }
 
         // let wallet = new Wallet();
-        // wallet.blockchainName = BlockchainName.BITCOIN_TEST;
+        // wallet.blockchainName = BlockchainName.BITCOIN;
         // wallet.index = 15;
         // wallet.privateKey = "asd";
         // wallet.tokenBalance = new Array<TokenBalance>();
@@ -58,7 +58,7 @@ export class AppService implements OnModuleInit {
         // await this.walletService.save(wallet);
 
         // let transaction = new Transaction();
-        // transaction.blockchainName = BlockchainName.ETHEREUM_TEST;
+        // transaction.blockchainName = BlockchainName.ETHEREUM;
         // transaction.type = TransactionType.DEPOSITE;
         // await this.transactionService.save(transaction);
 

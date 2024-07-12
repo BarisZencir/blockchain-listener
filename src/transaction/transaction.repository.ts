@@ -11,4 +11,12 @@ export class TransactionsRepository extends Repository<Transaction, TransactionD
         @InjectModel(Transaction.name) protected readonly mongoModel: Model<TransactionDocument>) {
         super(mongoModel);
     }
+
+    async findByTxHash(blockchainName : Transaction["blockchainName"], hash: Transaction["hash"]) : Promise<Transaction> {
+        return this.mongoModel.findOne({ 
+            blockchainName : blockchainName,
+            hash : hash
+        })
+        .lean();
+    }
 }
