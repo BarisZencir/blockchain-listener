@@ -13,26 +13,26 @@ import { HDWalletModule } from 'src/_core/hdwallet/hdwallet.module';
 import { EthereumModule } from 'src/networks/ethereum/ethereum.module';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      load: [configuration],
-      isGlobal: true,
-    }),
-    DefaultLoggerModule,
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGO_PATH'),
-      }),
-      inject: [ConfigService],
-    }),
-    ScheduleModule.forRoot(),
-    BlockModule,
-    WalletModule,
-    TransactionModule,
-    HDWalletModule,
-    EthereumModule],
-  controllers: [],
-  providers: [BlockListenerService, BlockListenerScheduler],
+    imports: [
+        ConfigModule.forRoot({
+            load: [configuration],
+            isGlobal: true,
+        }),
+        DefaultLoggerModule,
+        MongooseModule.forRootAsync({
+            imports: [ConfigModule],
+            useFactory: async (configService: ConfigService) => ({
+                uri: configService.get<string>('MONGO_PATH'),
+            }),
+            inject: [ConfigService],
+        }),
+        ScheduleModule.forRoot(),
+        BlockModule,
+        WalletModule,
+        TransactionModule,
+        HDWalletModule,
+        EthereumModule],
+    controllers: [],
+    providers: [BlockListenerService, BlockListenerScheduler],
 })
-export class BlockListenerModule {}
+export class BlockListenerModule { }
