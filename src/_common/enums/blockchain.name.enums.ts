@@ -1,0 +1,7 @@
+export enum BlockchainName {
+	BITCOIN = "BITCOIN",
+	ETHEREUM = "ETHEREUM",
+
+	BITCOIN_TEST = "BITCOIN_TEST",
+	ETHEREUM_TEST = "ETHEREUM_TEST",
+} 
