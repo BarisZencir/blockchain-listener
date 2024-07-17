@@ -6,7 +6,7 @@ import { Wallet, WalletDocument } from './wallet.model';
 import { BlockchainName } from 'src/_common/enums/blockchain.name.enums';
 
 @Injectable()
-export class WalletsRepository extends Repository<Wallet, WalletDocument>{
+export class WalletRepository extends Repository<Wallet, WalletDocument>{
 
     constructor(
         @InjectModel(Wallet.name) protected readonly mongoModel: Model<WalletDocument>) {

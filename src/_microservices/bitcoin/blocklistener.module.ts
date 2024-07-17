@@ -11,6 +11,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HDWalletModule } from 'src/_core/hdwallet/hdwallet.module';
 import { BitcoinModule } from 'src/networks/bitcoin/bitcoin.module';
+import { UtxoModule } from 'src/utxo/utxo.module';
 
 @Module({
     imports: [
@@ -29,6 +30,7 @@ import { BitcoinModule } from 'src/networks/bitcoin/bitcoin.module';
         ScheduleModule.forRoot(),
         BlockModule,
         WalletModule,
+        UtxoModule,
         TransactionModule,
         HDWalletModule,
         BitcoinModule],

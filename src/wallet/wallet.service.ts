@@ -1,14 +1,14 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Service } from '../_common/service';
 import { TokenBalance, Wallet, WalletDocument } from './wallet.model';
-import { WalletsRepository } from './wallet.repository';
+import { WalletRepository } from './wallet.repository';
 import { HDWalletService } from 'src/_core/hdwallet/hdwallet.service';
 import { BlockchainName } from 'src/_common/enums/blockchain.name.enums';
 import { ConfigService } from '@nestjs/config';
 
 
 @Injectable()
-export class WalletService extends Service<Wallet, WalletDocument, WalletsRepository> implements OnModuleInit {
+export class WalletService extends Service<Wallet, WalletDocument, WalletRepository> implements OnModuleInit {
 
     private readonly logger = new Logger(WalletService.name);
 
@@ -18,7 +18,7 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletsReposi
     }
 
     constructor(
-        protected repository: WalletsRepository,
+        protected repository: WalletRepository,
         private configService: ConfigService,
         private hdWalletService : HDWalletService,
     ) {
@@ -27,7 +27,7 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletsReposi
 
     async onModuleInit() : Promise<void> {
         let mnemonic : string;
-        let numberOfAddresses = this.configService.get<number>("HOT_WALLET_NUMBER_OF_ADDRESSES");
+        let numberOfAddresses = this.configService.get<number>("wallet.numberOfAddresses");
 
         let walletList = Array<Wallet>();
 
@@ -49,10 +49,10 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletsReposi
                     wallet.nonce = 0;
                     wallet.privateKey = address.privateKey;
                     wallet.publicKey = address.publicKey;
-                    wallet.address = address.address;
+                    wallet.address = address.address.toLowerCase();
                     wallet.available = wallet.index == 0 ? false : true;
-                    wallet.balance = "0";
-                    wallet.tokenBalance = new Array<TokenBalance>();
+                    // wallet.estimatedBalance = "0";
+                    // wallet.tokenBalance = new Array<TokenBalance>();
                     walletList.push(wallet);
                 });
 
@@ -79,10 +79,10 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletsReposi
                     wallet.nonce = 0;
                     wallet.privateKey = address.privateKey;
                     wallet.publicKey = address.publicKey;
-                    wallet.address = address.address;
+                    wallet.address = address.address.toLowerCase();
                     wallet.available = wallet.index == 0 ? false : true;
-                    wallet.balance = "0";
-                    wallet.tokenBalance = new Array<TokenBalance>();
+                    // wallet.estimatedBalance = "0";
+                    // wallet.tokenBalance = new Array<TokenBalance>();
                     walletList.push(wallet);
                 });
 

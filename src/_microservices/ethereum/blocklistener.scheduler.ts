@@ -55,7 +55,7 @@ export class BlockListenerScheduler implements OnModuleInit {
             }
     
             let nextBlockNumber = this.currentBlockNumber.plus(1);
-            let hasTransaction = await this.blockListenerService.proccessBlock(nextBlockNumber);
+            let hasTransaction = await this.blockListenerService.proccessBlock(nextBlockNumber, liveBlockNumber);
             //hasTransaction : belki broadcast vs ekleriz.
 
             this.currentBlockNumber = nextBlockNumber;

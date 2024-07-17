@@ -19,4 +19,12 @@ export class TransactionsRepository extends Repository<Transaction, TransactionD
         })
         .lean();
     }
+
+    async findByTxid(blockchainName : Transaction["blockchainName"], txid: Transaction["txid"]) : Promise<Transaction> {
+        return this.mongoModel.findOne({ 
+            blockchainName : blockchainName,
+            txid : txid
+        })
+        .lean();
+    }
 }

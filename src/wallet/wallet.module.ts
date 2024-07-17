@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Wallet, WalletSchema } from './wallet.model';
 import { WalletService } from './wallet.service';
-import { WalletsRepository } from './wallet.repository';
+import { WalletRepository } from './wallet.repository';
 import { HDWalletModule } from 'src/_core/hdwallet/hdwallet.module';
 import { WalletController } from './wallet.controller';
  
@@ -13,7 +13,7 @@ import { WalletController } from './wallet.controller';
   ],
   exports: [WalletService],
   providers: [
-    WalletsRepository, 
+    WalletRepository, 
     WalletService],
   controllers: [WalletController],
 })

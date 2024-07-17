@@ -44,11 +44,13 @@ export class Wallet extends BaseModel {
 	@Prop({default : true})
 	available: boolean;
 
-	@Prop({default : "0", required: true})
-	balance: string;
+	// //note: bu deger icin bir virtual yazalim.
+	// //bu deger %100 dogru olmayabilir. Ama yakınsayacagi icin hot-cold wallet transferleri sirasinda performans katkisi olacaktir
+	// @Prop({default : "0", required: true})
+	// estimatedBalance: string;
 
-	@Prop({ type: [TokenBalanceSchema], default: [] })
-	tokenBalance: TokenBalance[];  
+	// @Prop({ type: [TokenBalanceSchema], default: [] })
+	// tokenBalance: TokenBalance[];  
 
 }
 

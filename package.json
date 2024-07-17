@@ -30,6 +30,7 @@
     "bignumber.js": "^9.1.2",
     "bip32": "^4.0.0",
     "bip39": "^3.1.0",
+    "bitcoin-core": "^4.2.0",
     "bitcoinjs-lib": "^6.1.6",
     "class-validator": "^0.14.1",
     "ethereumjs-common": "^1.5.2",

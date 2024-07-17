@@ -33,6 +33,9 @@ export class Transaction extends BaseModel {
 	hash: string;
 
 	@Prop()
+	txid: string;
+
+	@Prop()
 	data: string;
 
 	@Prop()

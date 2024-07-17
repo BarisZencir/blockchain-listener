@@ -55,7 +55,7 @@ export class BlockListenerService extends EthereumService implements OnModuleIni
         this.blockService.update(block);
     }
 
-    async proccessBlock(blockNumber: BigNumber): Promise<boolean> {
+    async proccessBlock(blockNumber: BigNumber, latestBlockNumber : BigNumber): Promise<boolean> {
 
         this.logger.debug('Ethereum block processed. blockNumber: ' + blockNumber);
         
@@ -95,6 +95,10 @@ export class BlockListenerService extends EthereumService implements OnModuleIni
                         }
                     } else if (toWallet) {
                         // DEPOSIT
+                        
+                        // toWallet.estimatedBalance = (new BigNumber(toWallet.estimatedBalance))
+                        //     .plus(txJSON.value).toString();
+
                         let transaction = new Transaction();
  
                         transaction.blockchainName = BlockchainName.ETHEREUM;
@@ -105,8 +109,8 @@ export class BlockListenerService extends EthereumService implements OnModuleIni
                         transaction.to = txJSON.to;
                         transaction.amount = String(txJSON.value);
                         transaction.fee = new BigNumber(txJSON.gasPrice).multipliedBy(new BigNumber(txJSON.gas)).toString();
-                        transaction.processedBlockNumber = String(txJSON.blockNumber);
-                        transaction.complatedBlockNumber = blockNumber.toString();
+                        transaction.processedBlockNumber = blockNumber.toString();
+                        transaction.complatedBlockNumber = latestBlockNumber.toString();
 
                         await this.transactionService.save(transaction);
                         hasTransaction = true;

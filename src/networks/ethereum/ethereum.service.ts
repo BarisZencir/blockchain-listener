@@ -13,12 +13,8 @@ import Web3 from 'web3';
 import { Transaction } from 'ethereumjs-tx';
 import Common from 'ethereumjs-common';
 
-function sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 type Settings = {
-    ws: string;
+    ws: string,
     chainId : number,
     networkId : number
 };
@@ -102,7 +98,7 @@ export class EthereumService implements OnModuleInit {
                 throw new Error('Cannot connect to provider.');
             }    
         } else {
-            throw new Error('Network Error. There is no connection to provider.');
+            throw new Error('Network Error. There is no connection to settings defined.');
         }
     }
 
