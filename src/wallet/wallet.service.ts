@@ -31,6 +31,13 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletReposit
 
         let walletList = Array<Wallet>();
 
+        //testing
+        // mnemonic = this.configService.get<string>("HOT_WALLET_BTC_MNEMONIC");
+        // let addressesTest = this.hdWalletService.generateAddresses(BlockchainName.BITCOIN, mnemonic, numberOfAddresses);
+        // for(let i = 0; i < 10; i++) {
+        //     console.log(addressesTest[i].address + "    "  + addressesTest[i].privateKey);
+        // }
+
         let isExistsBTCAddresses = await this.repository.exists({blockchainName : BlockchainName.BITCOIN});
         if(!isExistsBTCAddresses) {
 

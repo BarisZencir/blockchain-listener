@@ -28,6 +28,7 @@ export default () => ({
             password : process.env.NETWORK_BITCOIN_PASSWORD,
             starterBlockNumber : new BigNumber(process.env.NETWORK_BITCOIN_STARTER_BLOCK_NUMBER || 0),
             blockGap : new BigNumber(process.env.NETWORK_BITCOIN_LISTENER_BLOCK_GAP || 0),
+            satoshiFee : new BigNumber(process.env.NETWORK_BITCOIN_SATOSHI_FEE || 0)
         }
 
     }

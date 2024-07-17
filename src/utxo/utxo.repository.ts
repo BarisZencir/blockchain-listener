@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Repository } from '../_common/repository';
 import { BlockchainName } from 'src/_common/enums/blockchain.name.enums';
 import { Utxo, UtxoDocument } from './utxo.model';
+import { UtxoState } from './enum/utxo.state';
 
 @Injectable()
 export class UtxoRepository extends Repository<Utxo, UtxoDocument>{
@@ -17,6 +18,15 @@ export class UtxoRepository extends Repository<Utxo, UtxoDocument>{
         return this.mongoModel.find({ 
             blockchainName: blockchainName,
             address: { $regex: new RegExp(`^${address}$`, 'i') } // Case insensitive search
+        })
+        .lean();
+    }
+
+    async findByAddressAndState(blockchainName: Utxo["blockchainName"], address: Utxo["address"], state : UtxoState): Promise<Utxo[]> {
+        return this.mongoModel.find({ 
+            blockchainName: blockchainName,
+            address: { $regex: new RegExp(`^${address}$`, 'i') }, // Case insensitive search
+            state : state
         })
         .lean();
     }

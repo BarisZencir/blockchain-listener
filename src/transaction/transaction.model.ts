@@ -52,7 +52,13 @@ export class Transaction extends BaseModel {
 	amount: string; // kusurat cok napalim, string tuttum ama sorun bu. 
 
 	@Prop()
+	estimatedAmount: string; // kusurat cok napalim, string tuttum ama sorun bu. 
+
+	@Prop()
 	fee: string; // kusurat cok napalim, string tuttum ama sorun bu. 
+
+	@Prop()
+	estimatedFee: string; // kusurat cok napalim, string tuttum ama sorun bu. 
 
 	@Prop()
 	requestedBlockNumber: string;

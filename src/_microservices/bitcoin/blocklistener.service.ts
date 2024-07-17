@@ -25,11 +25,18 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
         protected readonly transactionService: TransactionService
 
     ) {
-        super(configService, walletService, utxoService);
+        super(configService, walletService, utxoService, transactionService);
     }
 
     async onModuleInit(): Promise<void> {
         super.onModuleInit();
+
+        // let txId = await this.createTransaction(
+		// 	"bcrt1qefcv4stdjgfsg0s425a5k9wnmc8cg9mm0nxm4h",
+		// 	"bcrt1qmvqqv6mjk6ufm45dnxuutsrzx20k7mrgwuslwt",
+		// 	24,
+		// 	"cUMhFwYefQedP2zXBN3yME7jJcoQayii5H1wmHVF3t2WL9AyogVS"
+		// );
     }
 
     
@@ -75,7 +82,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
             const transactionHashList = blockJSON.tx || [];
 
             if(transactionHashList.length > 1) {
-                console.log("block has tx");
+                 console.log("block has tx");
             }
 
             for (let i = 0; i < transactionHashList.length; i++) {
@@ -96,6 +103,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
 
                     let voutAddresses = [];
                     let voutValues = [];
+                    let voutScriptPubKeys = [];
                     let voutTotalValue = new BigNumber(0);
 
                     let fee : BigNumber;
@@ -120,7 +128,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
                         voutAddresses.push(voutAddress);
                         voutValues.push(voutValue);
                         voutTotalValue = voutTotalValue.plus(voutValue);
-
+                        voutScriptPubKeys.push(vout.scriptPubKey.hex)
                     }
 
                     //calculate fee
@@ -153,6 +161,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
                         let utxo = new Utxo();
                         utxo.txid = txid;
                         utxo.vout = voutAddresses.indexOf(toWallet.address);
+                        utxo.scriptPubKey = voutScriptPubKeys[utxo.vout];
                         utxo.address = toWallet.address;
                         utxo.blockchainName = toWallet.blockchainName;
                         utxo.amount = (new BigNumber(voutValues[utxo.vout])).toString();
@@ -194,6 +203,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
 
                             if(utxo) {
                                 utxo.state = UtxoState.SPENT;
+                                utxo.usedTxid = txid;
                                 await this.utxoService.update(utxo);
                             }
                             
@@ -210,6 +220,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
                                 utxo.txid = txid;
                                 utxo.vout = voutAddresses.indexOf(toWallet.address);
                                 utxo.address = toWallet.address;
+                                utxo.scriptPubKey = voutScriptPubKeys[utxo.vout];
                                 utxo.blockchainName = toWallet.blockchainName;
                                 utxo.amount = (new BigNumber(voutValues[utxo.vout])).toString();
                                 utxo.state = UtxoState.UN_SPENT;                            
@@ -231,7 +242,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
 
 
                             // WITHDRAW + VIRMAN
-                            const transaction = await this.transactionService.findByTxid(BlockchainName.BITCOIN, txJSON.hash);
+                            const transaction = await this.transactionService.findByTxid(BlockchainName.BITCOIN, txid);
                             if (!transaction) {
                                 // TODO: Handle case if txDoc is null
                             } else {
@@ -242,7 +253,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
                                 transaction.fee = fee.toString();
                                 transaction.processedBlockNumber = blockNumber.toString();
                                 transaction.complatedBlockNumber = latestBlockNumber.toString();        
-                                await this.transactionService.save(transaction);
+                                await this.transactionService.update(transaction);
         
                                 hasTransaction = true;
                             }

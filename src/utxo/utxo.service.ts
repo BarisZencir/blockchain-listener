@@ -5,6 +5,7 @@ import { BlockchainName } from 'src/_common/enums/blockchain.name.enums';
 import { ConfigService } from '@nestjs/config';
 import { UtxoRepository } from './utxo.repository';
 import { Utxo, UtxoDocument } from './utxo.model';
+import { UtxoState } from './enum/utxo.state';
 
 
 @Injectable()
@@ -27,5 +28,8 @@ export class UtxoService extends Service<Utxo, UtxoDocument, UtxoRepository> imp
         return this.repository.findByAddress(blockchainName, address);
     }
 
+    async findByAddressAndState(blockchainName : Utxo["blockchainName"], address: Utxo["address"], state : UtxoState) : Promise<Utxo[]> {
+        return this.repository.findByAddressAndState(blockchainName, address, state);
+    }
 
 }

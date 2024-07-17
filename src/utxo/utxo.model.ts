@@ -23,9 +23,8 @@ export class Utxo extends BaseModel {
 	@Prop({required: true})
 	address: string;
 
-	//?
-	// @Prop({required: true})
-	// scriptPubKey: string;
+	@Prop({required: true})
+	scriptPubKey: string;
 
 	@Prop({default : "0", required: true})
 	amount: string;
@@ -35,6 +34,12 @@ export class Utxo extends BaseModel {
 		default: UtxoState.UN_SPENT
 	})
 	state: UtxoState;
+
+	@Prop()
+	estimatedUsedTxid: string;
+
+	@Prop()
+	usedTxid: string;
 
 }
 

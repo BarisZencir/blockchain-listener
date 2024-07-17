@@ -18,8 +18,14 @@ export class HDWalletService implements OnModuleInit {
 	generateAddresses(blockchainName: BlockchainName, mnemonic : string, numberOfAddresses: number) : IAddressResult[] {
 
 		if(blockchainName == BlockchainName.BITCOIN) {
+			// derivePath: "m/84'/1'/0'/0",
+			// networkName : "regtest"
+			// derivePath: "m/84'/0'/0'/0",
+			// networkName : "bitcoin"
+
 			return (new BitcoinHDWallet(mnemonic, {
-				derivePath: "m/44'/0'/0'/0"
+				derivePath: "m/84'/1'/0'/0",
+				networkName : "regtest"
 			})).generateAddresses(numberOfAddresses);
 		}
 
