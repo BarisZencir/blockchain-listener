@@ -5,6 +5,8 @@ import { Wallet } from 'ethers';
 import { BlockchainName } from 'src/_common/enums/blockchain.name.enums';
 import { Block } from 'src/block/block.model';
 import { BlockService } from 'src/block/block.service';
+import { EthereumTokenName } from 'src/networks/ethereum/enum/token.name';
+import { EthereumContractService, ITransferEvent } from 'src/networks/ethereum/ethereum.contract.service';
 import { EthereumService } from 'src/networks/ethereum/ethereum.service';
 import { TransactionState, TransactionType } from 'src/transaction/enum/transaction.state';
 import { Transaction } from 'src/transaction/transaction.model';
@@ -12,7 +14,7 @@ import { TransactionService } from 'src/transaction/transaction.service';
 import { WalletService } from 'src/wallet/wallet.service';
 
 @Injectable()
-export class BlockListenerService extends EthereumService implements OnModuleInit {
+export class BlockListenerService extends EthereumContractService implements OnModuleInit {
 
     logger = new Logger(BlockListenerService.name);
 
@@ -28,12 +30,20 @@ export class BlockListenerService extends EthereumService implements OnModuleIni
 
     async onModuleInit(): Promise<void> {
         super.onModuleInit();
+
+        let contractNames = "Ethereum Contract Listener - tokenGroupIndex: " + this. tokenGroupIndex + "   ->  ";
+        for(let i = 0; i < this.availableTokenNames.length; i++) {
+            let name = await this.getContractName(this.availableTokenNames[i]);
+            contractNames += name + " ";
+        }
+        this.logger.debug(contractNames);
+
     }
 
     async getLatestProccessedBlockNumber() : Promise<BigNumber> {
         let block = await this.blockService.findOne({
             blockchainName : BlockchainName.ETHEREUM,
-            groupIndex : -1
+            groupIndex : this.tokenGroupIndex
         })
 
         if(!block) {
@@ -47,13 +57,14 @@ export class BlockListenerService extends EthereumService implements OnModuleIni
         let block = new Block();
         block.blockNumber = blockNumber.toString();
         block.blockchainName = BlockchainName.ETHEREUM;
+        block.groupIndex = this.tokenGroupIndex;
         this.blockService.save(block);
     }
 
     async updateBlock(blockNumber: BigNumber) : Promise<void> {
         let block = await this.blockService.findOne({
             blockchainName : BlockchainName.ETHEREUM,
-            groupIndex : -1
+            groupIndex : this.tokenGroupIndex
         })
         block.blockNumber = blockNumber.toString();
         this.blockService.update(block);
@@ -61,38 +72,38 @@ export class BlockListenerService extends EthereumService implements OnModuleIni
 
     async proccessBlock(blockNumber: BigNumber, latestBlockNumber : BigNumber): Promise<boolean> {
 
-        this.logger.debug('Ethereum block processed. blockNumber: ' + blockNumber);
+        this.logger.debug('Ethereum( token group index: '+ this.tokenGroupIndex +') block processed. blockNumber: ' + blockNumber);
         
         try {
-            
+            let events = new Array<ITransferEvent>();
             let hasTransaction = false;
-            const blockJSON = await this.getBlock(blockNumber);
-            if (!blockJSON) {
-                throw new Error(`Err1. in Ethereum processBlock. blockNumber: ${blockNumber}`);
+
+            for(let tokenName of this.availableTokenNames) {
+                let tokenEvents = await this.getContractTransferEvents(tokenName, blockNumber.toNumber());
+                if(tokenEvents.length) {
+                    events = events.concat(tokenEvents);
+                }
             }
 
-            const transactionHashList = blockJSON.transactions || [];
-
-            for (let i = 0; i < transactionHashList.length; i++) {
+            for (let event of events) {
                 try {
-                    const txJSON = await this.getTransaction(transactionHashList[i]);
-
-                    let fromWallet = await this.walletService.findByAddress(BlockchainName.ETHEREUM, txJSON.from);
-                    let toWallet = await this.walletService.findByAddress(BlockchainName.ETHEREUM, txJSON.to);
-
+                    let txJSON = await this.getTransaction(event.transactionHash);
+                    let fromWallet = await this.walletService.findByAddress(BlockchainName.ETHEREUM, event.from);
+                    let toWallet = await this.walletService.findByAddress(BlockchainName.ETHEREUM, event.to);
+  
                     if (fromWallet) {
                         // WITHDRAW + VIRMAN
-                        const transaction = await this.transactionService.findByTxHash(BlockchainName.ETHEREUM, txJSON.hash);
+                        const transaction = await this.transactionService.findByTxHash(BlockchainName.ETHEREUM, event.transactionHash);
                         if (!transaction) {
                             // TODO: Handle case if txDoc is null
                         } else {
  
                             transaction.state = TransactionState.COMPLATED;
-                            transaction.amount = txJSON.value;
+                            transaction.amount = event.value;
                             transaction.type = (toWallet == null) ? TransactionType.WITHDRAW : TransactionType.VIRMAN;
                             transaction.fee = new BigNumber(txJSON.gasPrice).multipliedBy(new BigNumber(txJSON.gas)).toString();
-                            transaction.processedBlockNumber = String(txJSON.blockNumber);
-                            transaction.complatedBlockNumber = blockNumber.toString();
+                            transaction.processedBlockNumber = blockNumber.toString();
+                            transaction.complatedBlockNumber = latestBlockNumber.toString();
                             await this.transactionService.update(transaction);
 
                             hasTransaction = true;
@@ -106,12 +117,13 @@ export class BlockListenerService extends EthereumService implements OnModuleIni
                         let transaction = new Transaction();
  
                         transaction.blockchainName = BlockchainName.ETHEREUM;
+                        transaction.tokenName = event.tokenName;
                         transaction.state = TransactionState.COMPLATED;
                         transaction.type = TransactionType.DEPOSIT;
-                        transaction.hash = txJSON.hash;
-                        transaction.from = txJSON.from;
-                        transaction.to = txJSON.to;
-                        transaction.amount = txJSON.value;
+                        transaction.hash = event.transactionHash;
+                        transaction.from = event.from;
+                        transaction.to = event.to;
+                        transaction.amount = event.value;
                         transaction.fee = new BigNumber(txJSON.gasPrice).multipliedBy(new BigNumber(txJSON.gas)).toString();
                         transaction.processedBlockNumber = blockNumber.toString();
                         transaction.complatedBlockNumber = latestBlockNumber.toString();
@@ -124,9 +136,9 @@ export class BlockListenerService extends EthereumService implements OnModuleIni
                     throw error;
                 }
             }
-
+            
             await this.updateBlock(blockNumber);
-            return hasTransaction;
+            return true;
         } catch (error) {
             throw error;
         }

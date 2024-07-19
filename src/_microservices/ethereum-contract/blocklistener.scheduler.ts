@@ -13,7 +13,6 @@ export class BlockListenerScheduler implements OnModuleInit {
     private currentBlockNumber : BigNumber;
     private blockGap : BigNumber;
     private lock : boolean;
-    
     constructor(
         private configService: ConfigService,
         private readonly blockListenerService: BlockListenerService
@@ -23,8 +22,8 @@ export class BlockListenerScheduler implements OnModuleInit {
     }
 
     async onModuleInit(): Promise<void> {
-        this.blockGap = this.configService.get<BigNumber>("network.bitcoin.blockGap");            
-        this.currentBlockNumber = this.configService.get<BigNumber>("network.bitcoin.starterBlockNumber");            
+        this.blockGap = this.configService.get<BigNumber>("network.ethereum.blockGap");            
+        this.currentBlockNumber = this.configService.get<BigNumber>("network.ethereum.starterBlockNumber");            
         let latestProcessedBlockNumber = await this.blockListenerService.getLatestProccessedBlockNumber();
         if(latestProcessedBlockNumber) {
             if(this.currentBlockNumber.isLessThan(latestProcessedBlockNumber)) {

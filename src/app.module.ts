@@ -12,6 +12,7 @@ import { TransactionModule } from './transaction/transaction.module';
 import { WalletModule } from './wallet/wallet.module';
 import { HDWalletModule } from './_core/hdwallet/hdwallet.module';
 import { UtxoModule } from './utxo/utxo.module';
+import { EthereumModule } from './networks/ethereum/ethereum.module';
 @Module({
     imports: [
         ConfigModule.forRoot({
@@ -31,7 +32,8 @@ import { UtxoModule } from './utxo/utxo.module';
         WalletModule,
         UtxoModule,
         TransactionModule,
-        HDWalletModule
+        HDWalletModule,
+        EthereumModule
     ],
     controllers: [],
     providers: [AppService, AppTasksService],

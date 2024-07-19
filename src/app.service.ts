@@ -28,7 +28,7 @@ export class AppService implements OnModuleInit {
 
         this.logger.log("configTest: " + configTest2);
 
-        // let currentBlock = await this.blockService.findOne({blockchainName : "Bitcoin"});
+        // let currentBlock = await this.blockService.findOne({blockchainName : "Bitcoin", groupIndex : -1});
         // if(!currentBlock) {
         //   let block = new Block();
         //   block.blockNumber = 199;

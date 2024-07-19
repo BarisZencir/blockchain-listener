@@ -8,10 +8,12 @@ import { WalletService } from 'src/wallet/wallet.service';
 import _ from 'lodash';
 import BigNumber from "bignumber.js";
 import * as ethUtil from 'ethereumjs-util';
-import { Transaction as EthereumTx } from 'ethereumjs-tx';
 import Web3 from 'web3';
-import { Transaction } from 'ethereumjs-tx';
 import Common from 'ethereumjs-common';
+import { sleep } from 'src/_common/utils/sandbox.utils';
+import { TransactionService } from 'src/transaction/transaction.service';
+import { Transaction } from 'src/transaction/transaction.model';
+import { TransactionState, TransactionType } from 'src/transaction/enum/transaction.state';
 
 type Settings = {
     ws: string,
@@ -29,7 +31,7 @@ export class EthereumService implements OnModuleInit {
 	constructor(
 		protected configService: ConfigService,
 		protected walletService: WalletService,
-
+        protected transactionService : TransactionService
 	) {
 		this.web3 = null;
         
@@ -42,14 +44,14 @@ export class EthereumService implements OnModuleInit {
 
 	async onModuleInit(): Promise<void> {
 		
-		await this.connect();
-        // let isConnected = await this.isConnected();
-        // console.log("isConnected: " + isConnected);
+		await this. connect();
+        let isConnected = await this.isConnected();
+        console.log("isConnected: " + isConnected);
 
         // let blockNumber = await this.getBlockNumber();
         // console.log("blockNumber: " + blockNumber);
 
-        // let block = await this.getBlock(Number(blockNumber));
+        // let block = await this.getBlock(blockNumber);
         // console.log("block: " + block);
 
         // let balance = await this.getBalance("0x7a19821b82165c5e0cc3ce54cdef03d0a1328556");
@@ -73,7 +75,7 @@ export class EthereumService implements OnModuleInit {
         // console.log("balance(acc 2): " + balance);
 	}
 
-    private async checkAndTryConnection(): Promise<void> {
+    protected async checkAndTryConnection(): Promise<void> {
         if (!this.isConnected()) {
             await this.connect();
         }
@@ -128,37 +130,79 @@ export class EthereumService implements OnModuleInit {
         return BigNumber((await this.web3!.eth.getBalance(address)).toString());		
     }
 
+    
     async sendRawTransaction(from: string, to: string, amount: string, privateKey: string): Promise<any> {
         await this.checkAndTryConnection();
 
         const txCount = await this.web3!.eth.getTransactionCount(from);
-		let value = this.web3!.utils.numberToHex(this.web3!.utils.toWei(amount, 'ether'));
-        const txData = {
-            nonce: this.web3!.utils.numberToHex(txCount),
-            gasLimit: this.web3!.utils.numberToHex(21000),
-            gasPrice: this.web3!.utils.numberToHex(this.web3!.utils.toWei('10', 'gwei')),
+		let value = this.web3.utils.numberToHex(this.web3!.utils.toWei(amount, 'ether'));
+        const tx = {
+            nonce: this.web3.utils.numberToHex(txCount),
             to: to,
-            value: value,
+            value : value,
+            gasLimit: this.web3.utils.numberToHex(100000),
+            gasPrice: this.web3.utils.numberToHex(this.web3!.utils.toWei('11', 'gwei')),
             chainId: this.settings.chainId
+
         };
+        
+        const signedTx = await this.web3.eth.accounts.signTransaction(tx, privateKey);
+        const receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction);        
+        
+        let transaction = new Transaction();
+        transaction.hash = receipt.transactionHash.toString();
+        transaction.state = TransactionState.REQUESTED;
+        transaction.estimatedAmount = value;
 
-        const common = Common.forCustomChain('mainnet', { 
-            name: 'custom',
-            networkId: this.settings.networkId,
-            chainId: this.settings.chainId
-        }, 'petersburg');
+        let toWallet = await this.walletService.findOne({
+            blockchainName : BlockchainName.ETHEREUM,
+            address : to   
+        });
 
-        const tx = new Transaction(txData, { common });
+        transaction.type = (toWallet == null) ? TransactionType.WITHDRAW : TransactionType.VIRMAN;
+        transaction.blockchainName = BlockchainName.ETHEREUM;
+        transaction.from = from;
+        transaction.to = to;
+        transaction.estimatedFee = (new BigNumber(tx.gasPrice)).times(tx.gasLimit).toString();
+        transaction.requestedBlockNumber = (await this.getBlockNumber())?.toString();
+        await this.transactionService.save(transaction);
+        
+        return receipt;
 
-        tx.sign(ethUtil.toBuffer(privateKey));
-
-        const serializedTx = tx.serialize();
-        const rawTx = '0x' + serializedTx.toString('hex');
-
-        const txResponse = await this.web3!.eth.sendSignedTransaction(rawTx);
-        const txResult = await this.getTransaction(txResponse.transactionHash.toString());
-        return txResult;
     }
+
+    //old works fine but better is better. 
+    // async sendRawTransaction(from: string, to: string, amount: string, privateKey: string): Promise<any> {
+    //     await this.checkAndTryConnection();
+
+    //     const txCount = await this.web3!.eth.getTransactionCount(from);
+	// 	let value = this.web3!.utils.numberToHex(this.web3!.utils.toWei(amount, 'ether'));
+    //     const txData = {
+    //         nonce: this.web3!.utils.numberToHex(txCount),
+    //         gasLimit: this.web3!.utils.numberToHex(21000),
+    //         gasPrice: this.web3!.utils.numberToHex(this.web3!.utils.toWei('10', 'gwei')),
+    //         to: to,
+    //         value: value,
+    //         chainId: this.settings.chainId
+    //     };
+
+    //     const common = Common.forCustomChain('mainnet', { 
+    //         name: 'custom',
+    //         networkId: this.settings.networkId,
+    //         chainId: this.settings.chainId
+    //     }, 'petersburg');
+
+    //     const tx = new Transaction(txData, { common });
+
+    //     tx.sign(ethUtil.toBuffer(privateKey));
+
+    //     const serializedTx = tx.serialize();
+    //     const rawTx = '0x' + serializedTx.toString('hex');
+
+    //     const txResponse = await this.web3!.eth.sendSignedTransaction(rawTx);
+    //     const txResult = await this.getTransaction(txResponse.transactionHash.toString());
+    //     return txResult;
+    // }
 
     async getTransaction(transactionHash: string): Promise<any> {
         await this.checkAndTryConnection();

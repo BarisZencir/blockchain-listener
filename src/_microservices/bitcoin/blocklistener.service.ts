@@ -17,6 +17,8 @@ import { WalletService } from 'src/wallet/wallet.service';
 @Injectable()
 export class BlockListenerService extends BitcoinService implements OnModuleInit {
 
+    logger = new Logger(BlockListenerService.name);
+
     constructor(
         protected configService: ConfigService,        
         protected readonly blockService: BlockService,
@@ -42,7 +44,8 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
     
     async getLatestProccessedBlockNumber() : Promise<BigNumber> {
         let block = await this.blockService.findOne({
-            blockchainName : BlockchainName.BITCOIN
+            blockchainName : BlockchainName.BITCOIN,
+            groupIndex : -1
         })
 
         if(!block) {
@@ -61,7 +64,8 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
 
     async updateBlock(blockNumber: BigNumber) : Promise<void> {
         let block = await this.blockService.findOne({
-            blockchainName : BlockchainName.BITCOIN
+            blockchainName : BlockchainName.BITCOIN,
+            groupIndex : -1
         })
         block.blockNumber = blockNumber.toString();
         this.blockService.update(block);

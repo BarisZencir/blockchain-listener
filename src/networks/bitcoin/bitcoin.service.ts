@@ -1,6 +1,6 @@
 'use strict';
 import * as _ from 'lodash';
-import * as Client from 'bitcoin-core';
+import Client from 'bitcoin-core';
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -168,10 +168,10 @@ export class BitcoinService implements OnModuleInit {
 
 	// İşlem oluşturma işlevi
 	// amount örnek: "0.1" btc
-	async createTransaction(fromAddress: string, toAddress: string, amount: number, wif: string): Promise<any> {
+	async createTransaction(from: string, to: string, amount: number, wif: string): Promise<any> {
 		try {
 			// Adım 1: UTXO'ları MongoDB'den alın
-			const utxos = await this.utxoService.findByAddressAndState(BlockchainName.BITCOIN, fromAddress, UtxoState.UN_SPENT);
+			const utxos = await this.utxoService.findByAddressAndState(BlockchainName.BITCOIN, from, UtxoState.UN_SPENT);
 			const satoshiFee = this.configService.get<BigNumber>("network.bitcoin.satoshiFee");
 
 			const satoshiAmount = this.convertBitcoinToSatoshi(amount);
@@ -192,11 +192,11 @@ export class BitcoinService implements OnModuleInit {
 
 			// Adım 2: Çıktıları oluşturun
 			const outputs: Output = {};
-			outputs[toAddress] = amount;
+			outputs[to] = amount;
 
 			const change = totalAmount.minus(satoshiAmount).minus(satoshiFee);
 			if (change.gt(0)) {
-				outputs[fromAddress] = this.convertSatoshiToBitcoin(change); // Değişim adresi
+				outputs[from] = this.convertSatoshiToBitcoin(change); // Değişim adresi
 			}
 
 			// Adım 3: İşlemi oluşturun
@@ -222,12 +222,12 @@ export class BitcoinService implements OnModuleInit {
 
 			let toWallet = await this.walletService.findOne({
 				blockchainName : BlockchainName.BITCOIN,
-				address : toAddress   
+				address : to   
 			});
 			transaction.type = (toWallet == null) ? TransactionType.WITHDRAW : TransactionType.VIRMAN;
 			transaction.blockchainName = BlockchainName.BITCOIN;
-			transaction.from = fromAddress;
-			transaction.to = toAddress;
+			transaction.from = from;
+			transaction.to = to;
 			transaction.estimatedFee = satoshiFee.toString();
 			transaction.requestedBlockNumber = (await this.getBlockNumber())?.toString();
 			await this.transactionService.save(transaction);

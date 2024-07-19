@@ -7,11 +7,16 @@ export type BlockDocument = Block & Document;
 @Schema()
 export class Block extends BaseModel {
 
-	@Prop({required: true, unique : true})
+	@Prop({required: true})
 	blockchainName: string;
 
 	@Prop()
 	blockNumber: string;
+
+	//main netlerde bu deger -1, token group listenerde listener index.
+	@Prop({required: true, default : -1})
+	groupIndex: number;
+
 }
 
 export const BlockSchema = createSchema(Block);
