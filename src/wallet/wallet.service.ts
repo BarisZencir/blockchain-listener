@@ -15,6 +15,7 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletReposit
     private availableWalletAddresses : {
         [BlockchainName.BITCOIN] : Wallet["address"][],
         [BlockchainName.ETHEREUM] : Wallet["address"][],
+        [BlockchainName.TRON] : Wallet["address"][],
     }
 
     constructor(
@@ -34,6 +35,10 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletReposit
         //testing
         // mnemonic = this.configService.get<string>("HOT_WALLET_BTC_MNEMONIC");
         // let addressesTest = this.hdWalletService.generateAddresses(BlockchainName.BITCOIN, mnemonic, numberOfAddresses);
+        // for(let i = 0; i < 10; i++) {
+        //     console.log(addressesTest[i].address + "    "  + addressesTest[i].privateKey);
+        // }
+        // let addressesTest = this.hdWalletService.generateAddresses(BlockchainName.TRON, "swap awful artwork exchange arctic slide under subway interest theme garden desk", numberOfAddresses);
         // for(let i = 0; i < 10; i++) {
         //     console.log(addressesTest[i].address + "    "  + addressesTest[i].privateKey);
         // }
@@ -98,7 +103,36 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletReposit
             }
         }
         
+        let isExistsTRXAddresses = await this.repository.exists({blockchainName : BlockchainName.TRON});
+        if(!isExistsTRXAddresses) {
 
+            if(numberOfAddresses <= 0) {
+                this.logger.warn("Pls enter HOT_WALLET_NUMBER_OF_ADDRESSES to .env file.")
+            }
+            
+            //burada default init.
+            mnemonic = this.configService.get<string>("HOT_WALLET_TRX_MNEMONIC");
+            if('undefined' != typeof mnemonic) {
+                let addresses = this.hdWalletService.generateAddresses(BlockchainName.TRON, mnemonic, numberOfAddresses);
+                addresses.forEach(address => {
+                    let wallet = new Wallet();
+                    wallet.blockchainName = BlockchainName.TRON;
+                    wallet.index = address.index;
+                    wallet.nonce = 0;
+                    wallet.privateKey = address.privateKey;
+                    wallet.publicKey = address.publicKey;
+                    wallet.address = address.address;
+                    wallet.available = wallet.index == 0 ? false : true;
+                    // wallet.estimatedBalance = "0";
+                    // wallet.tokenBalance = new Array<TokenBalance>();
+                    walletList.push(wallet);
+                });
+
+            } else {
+                this.logger.warn("trx mnemonic can not found. Pls enter HOT_WALLET_TRX_MNEMONIC to .env file.")
+            }
+        }
+        
         //TODO: bunu bulk ile yapalim.
         //base repoya o metod eklenecek.
         for(let i = 0; i < walletList.length; i++) {
@@ -116,6 +150,11 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletReposit
             available : true
         });
 
+        let availableTRXWallets = await this.repository.find({
+            blockchainName : BlockchainName.TRON,
+            available : true
+        });
+
         // this.availableWalletAddresses = {
         //     BITCOIN  : new Array<Wallet["address"]>(),
         //     ETHEREUM : new Array<Wallet["address"]>()
@@ -123,7 +162,8 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletReposit
 
         this.availableWalletAddresses = {
             BITCOIN  : availableBTCWallets.map(wallet => wallet.address),
-            ETHEREUM : availableETHWallets.map(wallet => wallet.address)
+            ETHEREUM : availableETHWallets.map(wallet => wallet.address),
+            TRON : availableTRXWallets.map(wallet => wallet.address),
         }
 
     }

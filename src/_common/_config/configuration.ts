@@ -57,15 +57,6 @@ export default () => ({
         port: parseInt(process.env.DATABASE_PORT, 10) || 5432
     },
     network: {
-        ethereum : {
-            ws: process.env.NETWORK_ETHEREUM_WS,
-            chainId: parseInt(process.env.NETWORK_ETHEREUM_CHAIN_ID),
-            networkId: parseInt(process.env.NETWORK_ETHEREUM_NETWORK_ID),
-            starterBlockNumber : new BigNumber(process.env.NETWORK_ETHEREUM_STARTER_BLOCK_NUMBER || 0),
-            blockGap : new BigNumber(process.env.NETWORK_ETHEREUM_LISTENER_BLOCK_GAP || 0),
-            tokenGroups : generateTokenGroups(BlockchainName.ETHEREUM)
-        },
-
         bitcoin : {
             host : process.env.NETWORK_BITCOIN_HOST,
             port: parseInt(process.env.NETWORK_BITCOIN_PORT),
@@ -74,6 +65,22 @@ export default () => ({
             starterBlockNumber : new BigNumber(process.env.NETWORK_BITCOIN_STARTER_BLOCK_NUMBER || 0),
             blockGap : new BigNumber(process.env.NETWORK_BITCOIN_LISTENER_BLOCK_GAP || 0),
             satoshiFee : new BigNumber(process.env.NETWORK_BITCOIN_SATOSHI_FEE || 0)
+        },
+        ethereum : {
+            ws: process.env.NETWORK_ETHEREUM_WS,
+            chainId: parseInt(process.env.NETWORK_ETHEREUM_CHAIN_ID),
+            networkId: parseInt(process.env.NETWORK_ETHEREUM_NETWORK_ID),
+            starterBlockNumber : new BigNumber(process.env.NETWORK_ETHEREUM_STARTER_BLOCK_NUMBER || 0),
+            blockGap : new BigNumber(process.env.NETWORK_ETHEREUM_LISTENER_BLOCK_GAP || 0),
+            tokenGroups : generateTokenGroups(BlockchainName.ETHEREUM)
+        },
+        tron : {
+            fullHost: process.env.NETWORK_TRON_FULL_NODE,
+            apiKey: process.env.NETWORK_TRON_API_KEY,
+            // apiPrivateKey: process.env.NETWORK_TRON_API_PRIVATE_KEY,
+            starterBlockNumber : new BigNumber(process.env.NETWORK_TRON_STARTER_BLOCK_NUMBER || 0),
+            blockGap : new BigNumber(process.env.NETWORK_ETHEREUM_TOKEN_GROUP_INDEX || 0),
+            tokenGroups : generateTokenGroups(BlockchainName.TRON)
         }
 
     }

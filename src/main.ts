@@ -22,7 +22,7 @@ async function bootstrap() {
     console.log("apiport:" + 3012)
     await app.listen(3012);
 
-    startMicroservices(3201);
+    //startMicroservices(3201);
     console.log("blocklistener started.");
 
 }

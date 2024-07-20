@@ -4,6 +4,7 @@ import { EthereumHDWallet } from './lib/ethereum.hdwallet';
 import { BitcoinHDWallet } from './lib/bitcoin.hdwallet';
 import { BlockchainName } from 'src/_common/enums/blockchain.name.enums';
 import { IAddressResult } from './address.result.interface';
+import { TronHDWallet } from './lib/tron.hdwallet';
 
 
 @Injectable()
@@ -35,6 +36,13 @@ export class HDWalletService implements OnModuleInit {
 				derivePath: "44'/60'/0'/0"
 			})).generateAddresses(numberOfAddresses);
 		}
+
+		if(blockchainName == BlockchainName.TRON) {
+			return (new TronHDWallet(mnemonic, {
+				derivePath: "m/44'/195'/0'/0"
+			})).generateAddresses(numberOfAddresses);
+		}
+
 	}
 
 	async onModuleInit(): Promise<void> {

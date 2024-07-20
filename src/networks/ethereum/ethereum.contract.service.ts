@@ -40,9 +40,9 @@ export class EthereumContractService extends EthereumService implements OnModule
     private tokenGroupsForInit : Map<string, string> = new Map<string, string>;
 
 	constructor(
-        protected configService: ConfigService,
+        protected readonly configService: ConfigService,
         protected readonly walletService: WalletService,
-        protected transactionService : TransactionService
+        protected readonly transactionService : TransactionService
 
     ) { 
         super(configService, walletService, transactionService);
