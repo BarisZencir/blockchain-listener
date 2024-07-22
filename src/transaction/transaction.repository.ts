@@ -19,4 +19,5 @@ export class TransactionsRepository extends Repository<Transaction, TransactionD
         })
         .lean();
     }
+
 }

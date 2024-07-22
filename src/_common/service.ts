@@ -22,6 +22,10 @@ export class Service<M extends BaseModel, D extends M & Document, R extends Repo
         return this.repository.find(filter);
     }
 
+    public async findByLimit(filter: any, limit : number): Promise<(M)[]> {
+        return this.repository.findByLimit(filter, limit);
+    }
+
     public async findAll(): Promise<(M)[]> {
         return this.repository.findAll();
     }

@@ -14,10 +14,7 @@ export class Transaction extends BaseModel {
 		default: TransactionState.REQUESTED
 	})
 	state: TransactionState;
-
-	@Prop({required: false})
-	withdrawRequestId: string;
-
+	
 	@Prop({
 		enum: TransactionType,
 		required : true
@@ -30,6 +27,9 @@ export class Transaction extends BaseModel {
 	blockchainName: BlockchainName;
 
 	@Prop({required: false})
+	withdrawRequestId: string;
+
+	@Prop({required: false})
 	tokenName: string;
 
 	@Prop()
@@ -37,10 +37,12 @@ export class Transaction extends BaseModel {
 
 	@Prop()
 	data: string;
-
 	
 	@Prop({default : false})
 	hasError: boolean;
+
+	@Prop({default : false})
+	isRead: boolean;
 
 	@Prop()
 	error: string;

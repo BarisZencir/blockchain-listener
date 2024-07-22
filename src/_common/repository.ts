@@ -24,6 +24,12 @@ export class Repository<M extends BaseModel, D extends M & Document> {
         filter = filter || {};
         return this.mongoModel.find(filter).lean({ autopopulate: true });
     }
+
+    async findByLimit(filter: any, limit : number): Promise<(M)[]> {
+        filter = filter || {};
+        return this.mongoModel.find(filter).limit(limit).lean({ autopopulate: true });
+    }
+
     
     async findAll(): Promise<(M)[]> {
         return this.mongoModel.find().lean({ autopopulate: true });
