@@ -25,7 +25,7 @@ export class BlockListenerService extends EthereumContractService implements OnM
         protected readonly transactionService: TransactionService
 
     ) { 
-        super(configService, walletService, transactionService);
+        super(configService, walletService);
     }
 
     async onModuleInit(): Promise<void> {

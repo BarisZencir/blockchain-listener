@@ -27,7 +27,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
         protected readonly transactionService: TransactionService
 
     ) {
-        super(configService, walletService, utxoService, transactionService);
+        super(configService, walletService, utxoService);
     }
 
     async onModuleInit(): Promise<void> {
@@ -178,7 +178,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
                         transaction.blockchainName = utxo.blockchainName;
                         transaction.state = TransactionState.COMPLATED;
                         transaction.type = TransactionType.DEPOSIT;
-                        transaction.txid = txid;
+                        transaction.hash = txid;
 
                         //simdilik kalsin. deposit'de from bizim icin onemli mi?
                         //transaction.from = ?;
@@ -246,7 +246,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
 
 
                             // WITHDRAW + VIRMAN
-                            const transaction = await this.transactionService.findByTxid(BlockchainName.BITCOIN, txid);
+                            const transaction = await this.transactionService.findByTxHash(BlockchainName.BITCOIN, txid);
                             if (!transaction) {
                                 // TODO: Handle case if txDoc is null
                             } else {

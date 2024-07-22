@@ -14,6 +14,7 @@ import { sleep } from 'src/_common/utils/sandbox.utils';
 import { TransactionService } from 'src/transaction/transaction.service';
 import { Transaction } from 'src/transaction/transaction.model';
 import { TransactionState, TransactionType } from 'src/transaction/enum/transaction.state';
+import { Wallet } from 'src/wallet/wallet.model';
 
 type Settings = {
     ws: string,
@@ -31,7 +32,6 @@ export class EthereumService implements OnModuleInit {
 	constructor(
 		protected configService: ConfigService,
 		protected walletService: WalletService,
-        protected transactionService : TransactionService
 	) {
 		this.web3 = null;
         
@@ -136,43 +136,48 @@ export class EthereumService implements OnModuleInit {
     }
 
     
-    async sendRawTransaction(from: string, to: string, amount: string, privateKey: string): Promise<any> {
-        await this.checkAndTryConnection();
+    async createTransaction(transaction : Transaction, to: string, amount: string, _signer: Wallet): Promise<Transaction> {
+        try {
 
-        const txCount = await this.web3!.eth.getTransactionCount(from);
-		let value = this.web3.utils.numberToHex(this.web3!.utils.toWei(amount, 'ether'));
-        const tx = {
-            nonce: this.web3.utils.numberToHex(txCount),
-            to: to,
-            value : value,
-            gasLimit: this.web3.utils.numberToHex(100000),
-            gasPrice: this.web3.utils.numberToHex(this.web3!.utils.toWei('11', 'gwei')),
-            chainId: this.settings.chainId
+            await this.checkAndTryConnection();
+            const txCount = await this.web3!.eth.getTransactionCount(_signer.address);
+            let value = this.web3.utils.numberToHex(this.web3!.utils.toWei(amount, 'ether'));
+            const tx = {
+                nonce: this.web3.utils.numberToHex(txCount),
+                to: to,
+                value : value,
+                gasLimit: this.web3.utils.numberToHex(100000),
+                gasPrice: this.web3.utils.numberToHex(this.web3!.utils.toWei('11', 'gwei')),
+                chainId: this.settings.chainId
 
-        };
-        
-        const signedTx = await this.web3.eth.accounts.signTransaction(tx, privateKey);
-        const receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction);        
-        
-        let transaction = new Transaction();
-        transaction.hash = receipt.transactionHash.toString();
-        transaction.state = TransactionState.REQUESTED;
-        transaction.estimatedAmount = value;
+            };
+            
+            const signedTx = await this.web3.eth.accounts.signTransaction(tx, _signer.privateKey);
+            const receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction);        
+            
+            transaction.hash = receipt.transactionHash.toString();
+            transaction.state = TransactionState.REQUESTED;
+            transaction.estimatedAmount = value;
 
-        let toWallet = await this.walletService.findOne({
-            blockchainName : BlockchainName.ETHEREUM,
-            address : to   
-        });
+            let toWallet = await this.walletService.findOne({
+                blockchainName : BlockchainName.ETHEREUM,
+                address : to   
+            });
 
-        transaction.type = (toWallet == null) ? TransactionType.WITHDRAW : TransactionType.VIRMAN;
-        transaction.blockchainName = BlockchainName.ETHEREUM;
-        transaction.from = from;
-        transaction.to = to;
-        transaction.estimatedFee = (new BigNumber(tx.gasPrice)).times(tx.gasLimit).toString();
-        transaction.requestedBlockNumber = (await this.getBlockNumber())?.toString();
-        await this.transactionService.save(transaction);
-        
-        return receipt;
+            transaction.type = (toWallet == null) ? TransactionType.WITHDRAW : TransactionType.VIRMAN;
+            transaction.blockchainName = BlockchainName.ETHEREUM;
+            transaction.from = _signer.address;
+            transaction.to = to;
+            transaction.estimatedFee = (new BigNumber(tx.gasPrice)).times(tx.gasLimit).toString();
+            transaction.requestedBlockNumber = (await this.getBlockNumber())?.toString();
+            
+            return transaction;
+        } catch(error) {
+			this.logger.error('Hata:', error);
+            transaction.hasError = true;
+			transaction.error = error.toString();
+			return transaction;
+        }
 
     }
 

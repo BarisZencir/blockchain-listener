@@ -13,6 +13,7 @@ import { Utxo } from 'src/utxo/utxo.model';
 import { Transaction } from 'src/transaction/transaction.model';
 import { TransactionState, TransactionType } from 'src/transaction/enum/transaction.state';
 import { TransactionService } from 'src/transaction/transaction.service';
+import { Wallet } from 'src/wallet/wallet.model';
 
 type Settings = {
 	connectionInfo : {
@@ -46,7 +47,6 @@ export class BitcoinService implements OnModuleInit {
 		protected configService: ConfigService,
 		protected walletService: WalletService,
 		protected utxoService : UtxoService,
-		protected transactionService : TransactionService
 	) {
 		this.client = null;
 		this.settings = {
@@ -60,7 +60,6 @@ export class BitcoinService implements OnModuleInit {
 		}
 
 	}
-
 
 	async onModuleInit(): Promise<void> {		
 		await this.initService();
@@ -169,14 +168,13 @@ export class BitcoinService implements OnModuleInit {
 	// 	}
 	// }
 
-
-
+	
 	// İşlem oluşturma işlevi
 	// amount örnek: "0.1" btc
-	async createTransaction(from: string, to: string, amount: number, wif: string): Promise<any> {
+	async createTransaction(transaction : Transaction, to: string, amount: string, _signer: Wallet): Promise<Transaction> {
 		try {
 			// Adım 1: UTXO'ları MongoDB'den alın
-			const utxos = await this.utxoService.findByAddressAndState(BlockchainName.BITCOIN, from, UtxoState.UN_SPENT);
+			const utxos = await this.utxoService.findByAddressAndState(BlockchainName.BITCOIN, _signer.address, UtxoState.UN_SPENT);
 			const satoshiFee = this.configService.get<BigNumber>("network.bitcoin.satoshiFee");
 
 			const satoshiAmount = this.convertBitcoinToSatoshi(amount);
@@ -197,18 +195,18 @@ export class BitcoinService implements OnModuleInit {
 
 			// Adım 2: Çıktıları oluşturun
 			const outputs: Output = {};
-			outputs[to] = amount;
+			outputs[to] = parseFloat(amount);
 
 			const change = totalAmount.minus(satoshiAmount).minus(satoshiFee);
 			if (change.gt(0)) {
-				outputs[from] = this.convertSatoshiToBitcoin(change); // Değişim adresi
+				outputs[_signer.address] = this.convertSatoshiToBitcoin(change); // Değişim adresi
 			}
 
 			// Adım 3: İşlemi oluşturun
 			const rawTx = await this.client.createRawTransaction(inputs, outputs);
 
 			// Adım 4: İşlemi imzalayın
-			const signedTx = await this.client.signRawTransactionWithKey(rawTx, [wif]);
+			const signedTx = await this.client.signRawTransactionWithKey(rawTx, [_signer.privateKey]);
 
 			// Adım 5: İşlemi yayınlayın
 			const txid = await this.client.sendRawTransaction(signedTx.hex);
@@ -219,8 +217,7 @@ export class BitcoinService implements OnModuleInit {
 				await this.utxoService.update(utxo);
 			}
 
-			let transaction = new Transaction();
-			transaction.txid = txid;
+			transaction.hash = txid;
 			transaction.state = TransactionState.REQUESTED;
 			transaction.estimatedAmount = this.convertBitcoinToSatoshi(amount).toString();
 
@@ -231,18 +228,18 @@ export class BitcoinService implements OnModuleInit {
 			});
 			transaction.type = (toWallet == null) ? TransactionType.WITHDRAW : TransactionType.VIRMAN;
 			transaction.blockchainName = BlockchainName.BITCOIN;
-			transaction.from = from;
+			transaction.from = _signer.address;
 			transaction.to = to;
 			transaction.estimatedFee = satoshiFee.toString();
 			transaction.requestedBlockNumber = (await this.getBlockNumber())?.toString();
-			await this.transactionService.save(transaction);
-
 
 			this.logger.debug('İşlem ID:', txid);
-			return txid;
+			return transaction;
 		} catch (error) {
 			this.logger.error('Hata:', error);
-			return false;
+            transaction.hasError = true;
+			transaction.error = error.toString();
+			return transaction;
 		}
 	}
 

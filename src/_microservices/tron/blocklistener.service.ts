@@ -23,7 +23,7 @@ export class BlockListenerService extends TronService implements OnModuleInit {
         protected readonly transactionService: TransactionService
 
     ) { 
-        super(configService, walletService, transactionService);
+        super(configService, walletService);
     }
 
     async onModuleInit(): Promise<void> {

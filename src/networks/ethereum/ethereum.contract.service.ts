@@ -42,10 +42,9 @@ export class EthereumContractService extends EthereumService implements OnModule
 	constructor(
         protected readonly configService: ConfigService,
         protected readonly walletService: WalletService,
-        protected readonly transactionService : TransactionService
 
     ) { 
-        super(configService, walletService, transactionService);
+        super(configService, walletService);
     }
 
 	async onModuleInit(): Promise<void> {
@@ -259,7 +258,6 @@ export class EthereumContractService extends EthereumService implements OnModule
         transaction.to = to;
         transaction.estimatedFee = (new BigNumber(tx.gasPrice)).times(tx.gasLimit).toString();
         transaction.requestedBlockNumber = (await this.getBlockNumber())?.toString();
-        await this.transactionService.save(transaction);
 
         return receipt;
     }

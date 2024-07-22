@@ -3,10 +3,9 @@ import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, Matches, MaxLength } 
 import { BlockchainName } from 'src/_common/enums/blockchain.name.enums';
 
 
-export class GetFreeAddressRequest {
+export class StartWithdrawRequest {
+    requestId : string;
     blockchainName : BlockchainName;
-}
-
-export class IsAddressExistsRequest {
-    blockchainName : BlockchainName;
+    to : string;
+    amounth : string;
 }

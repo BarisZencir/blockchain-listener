@@ -12,6 +12,7 @@ import { sleep } from 'src/_common/utils/sandbox.utils';
 import { TransactionService } from 'src/transaction/transaction.service';
 import { Transaction } from 'src/transaction/transaction.model';
 import { TransactionState, TransactionType } from 'src/transaction/enum/transaction.state';
+import { Wallet } from 'src/wallet/wallet.model';
 
 type Settings = {
     fullHost: string,
@@ -28,8 +29,7 @@ export class TronService implements OnModuleInit {
 	
 	constructor(
 		protected configService: ConfigService,
-		protected walletService: WalletService,
-        protected transactionService : TransactionService
+		protected walletService: WalletService
 	) {
 		this.tronWeb = null;
         
@@ -149,7 +149,7 @@ export class TronService implements OnModuleInit {
         return BigNumber(balance);
     }
 
-    async sendRawTransaction(from: string, to: string, amount: string, privateKey: string): Promise<any> {
+    async createTransaction(transaction : Transaction, to: string, amount: string, _signer: Wallet): Promise<Transaction> {
         await this.checkAndTryConnection();
 
         let value = this.tronWeb.toSun(amount);
@@ -158,12 +158,11 @@ export class TronService implements OnModuleInit {
             const tradeObj = await this.tronWeb.transactionBuilder.sendTrx(
                 to,
                 parseInt(value),
-                from
+                _signer.address
             );
-            const signedTxn = await this.tronWeb.trx.sign(tradeObj, privateKey);
+            const signedTxn = await this.tronWeb.trx.sign(tradeObj, _signer.privateKey);
             const receipt = await this.tronWeb.trx.sendRawTransaction(signedTxn);
     
-            let transaction = new Transaction();
             transaction.hash = receipt.txid;
             transaction.state = TransactionState.REQUESTED;
             transaction.estimatedAmount = value;
@@ -175,15 +174,17 @@ export class TronService implements OnModuleInit {
     
             transaction.type = (toWallet == null) ? TransactionType.WITHDRAW : TransactionType.VIRMAN;
             transaction.blockchainName = BlockchainName.TRON;
-            transaction.from = from;
+            transaction.from = _signer.address;
             transaction.to = to;
             transaction.estimatedFee = tradeObj.fee_limit;
             transaction.requestedBlockNumber = (await this.getBlockNumber()).toString();
-            await this.transactionService.save(transaction);
             
             return receipt;
         } catch(error) {
-            console.log(error);
+			this.logger.error('Hata:', error);
+            transaction.hasError = true;
+			transaction.error = error.toString();
+			return transaction;
         }
     }
 

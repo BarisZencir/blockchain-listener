@@ -21,9 +21,4 @@ export class TransactionService extends Service<Transaction, TransactionDocument
     async findByTxHash(blockchainName : Transaction["blockchainName"], hash: Transaction["hash"]) : Promise<Transaction> {
         return this.repository.findByTxHash(blockchainName, hash);
     }
-
-    async findByTxid(blockchainName : Transaction["blockchainName"], txid: Transaction["txid"]) : Promise<Transaction> {
-        return this.repository.findByTxid(blockchainName, txid);
-    }
-
 }

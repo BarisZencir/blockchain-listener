@@ -8,7 +8,6 @@ import { WalletService } from 'src/wallet/wallet.service';
 import _ from 'lodash';
 import BigNumber from 'bignumber.js';
 import TronWeb from 'tronweb';
-import { TransactionService } from 'src/transaction/transaction.service';
 import { sleep } from 'src/_common/utils/sandbox.utils';
 import { Transaction } from 'src/transaction/transaction.model';
 import { TransactionState, TransactionType } from 'src/transaction/enum/transaction.state';
@@ -33,9 +32,8 @@ export class TronContractService extends TronService implements OnModuleInit {
     constructor(
         protected readonly configService: ConfigService,
         protected readonly walletService: WalletService,
-        protected readonly transactionService: TransactionService
     ) {
-        super(configService, walletService, transactionService);
+        super(configService, walletService);
     }
 
     async onModuleInit(): Promise<void> {
@@ -203,7 +201,6 @@ export class TronContractService extends TronService implements OnModuleInit {
         transaction.blockchainName = BlockchainName.TRON;
         transaction.tokenName = tokenName;
         transaction.hash = tx;
-        transaction.txid = receipt?.txID;
         transaction.state = TransactionState.REQUESTED;
         transaction.estimatedAmount = amount;
         transaction.estimatedFee = receipt?.fee;
@@ -216,7 +213,6 @@ export class TronContractService extends TronService implements OnModuleInit {
         transaction.from = _signer.address;
         transaction.to = to;
         transaction.requestedBlockNumber = (await this.getBlockNumber()).toString();
-        await this.transactionService.save(transaction);
 
         return receipt.txID ? receipt : {txID : tx};
     }

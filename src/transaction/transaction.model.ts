@@ -15,6 +15,9 @@ export class Transaction extends BaseModel {
 	})
 	state: TransactionState;
 
+	@Prop({required: false})
+	withdrawRequestId: string;
+
 	@Prop({
 		enum: TransactionType,
 		required : true
@@ -33,10 +36,11 @@ export class Transaction extends BaseModel {
 	hash: string;
 
 	@Prop()
-	txid: string;
-
-	@Prop()
 	data: string;
+
+	
+	@Prop({default : false})
+	hasError: boolean;
 
 	@Prop()
 	error: string;
