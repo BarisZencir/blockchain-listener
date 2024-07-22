@@ -44,9 +44,10 @@ export class EthereumService implements OnModuleInit {
 
 	async onModuleInit(): Promise<void> {
 		
-		await this. connect();
-        let isConnected = await this.isConnected();
-        console.log("isConnected: " + isConnected);
+		await this.initService();
+
+        // let isConnected = await this.isConnected();
+        // console.log("isConnected: " + isConnected);
 
         // let blockNumber = await this.getBlockNumber();
         // console.log("blockNumber: " + blockNumber);
@@ -73,6 +74,10 @@ export class EthereumService implements OnModuleInit {
 
         // balance = await this.getBalance("0xb9d1EC049d114fc42AAb60A36D49282ee1D69679");
         // console.log("balance(acc 2): " + balance);
+	}
+
+    async initService(): Promise<void> {		
+		await this.connect();
 	}
 
     protected async checkAndTryConnection(): Promise<void> {

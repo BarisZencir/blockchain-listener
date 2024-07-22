@@ -29,7 +29,7 @@ export class BlockListenerService extends EthereumContractService implements OnM
     }
 
     async onModuleInit(): Promise<void> {
-        super.onModuleInit();
+        await super.initService();
 
         let contractNames = "Ethereum Contract Listener - tokenGroupIndex: " + this. tokenGroupIndex + "   ->  ";
         for(let i = 0; i < this.availableTokenNames.length; i++) {
@@ -58,7 +58,7 @@ export class BlockListenerService extends EthereumContractService implements OnM
         block.blockNumber = blockNumber.toString();
         block.blockchainName = BlockchainName.ETHEREUM;
         block.groupIndex = this.tokenGroupIndex;
-        this.blockService.save(block);
+        await this.blockService.save(block);
     }
 
     async updateBlock(blockNumber: BigNumber) : Promise<void> {
@@ -67,7 +67,7 @@ export class BlockListenerService extends EthereumContractService implements OnM
             groupIndex : this.tokenGroupIndex
         })
         block.blockNumber = blockNumber.toString();
-        this.blockService.update(block);
+        await this.blockService.update(block);
     }
 
     async proccessBlock(blockNumber: BigNumber, latestBlockNumber : BigNumber): Promise<boolean> {

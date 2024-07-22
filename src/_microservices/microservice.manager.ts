@@ -29,16 +29,22 @@ export function startMicroservices(starterPort : number) {
     const services = [
     ];
 
-    services.push({ path: 'dist/_microservices/bitcoin/main.js', port: starterPort++ })
-    services.push({ path: 'dist/_microservices/ethereum/main.js', port: starterPort++ })
-    services.push({ path: 'dist/_microservices/ethereum-contract/main.js', port: starterPort++, envSettings : {
-      NETWORK_ETHEREUM_TOKEN_GROUP_INDEX : 0
-    }})
-    services.push({ path: 'dist/_microservices/ethereum-contract/main.js', port: starterPort++, envSettings : {
-      NETWORK_ETHEREUM_TOKEN_GROUP_INDEX : 1
-    }})
-    services.push({ path: 'dist/_microservices/ethereum-contract/main.js', port: starterPort++, envSettings : {
-      NETWORK_ETHEREUM_TOKEN_GROUP_INDEX : 2
+    // services.push({ path: 'dist/_microservices/bitcoin/main.js', port: starterPort++ })
+    // services.push({ path: 'dist/_microservices/ethereum/main.js', port: starterPort++ })
+    services.push({ path: 'dist/_microservices/tron/main.js', port: starterPort++ })
+
+    // services.push({ path: 'dist/_microservices/ethereum-contract/main.js', port: starterPort++, envSettings : {
+    //   NETWORK_ETHEREUM_TOKEN_GROUP_INDEX : 0
+    // }})
+    // services.push({ path: 'dist/_microservices/ethereum-contract/main.js', port: starterPort++, envSettings : {
+    //   NETWORK_ETHEREUM_TOKEN_GROUP_INDEX : 1
+    // }})
+    // services.push({ path: 'dist/_microservices/ethereum-contract/main.js', port: starterPort++, envSettings : {
+    //   NETWORK_ETHEREUM_TOKEN_GROUP_INDEX : 2
+    // }})
+
+    services.push({ path: 'dist/_microservices/tron-contract/main.js', port: starterPort++, envSettings : {
+      NETWORK_TRON_TOKEN_GROUP_INDEX : 0
     }})
 
 

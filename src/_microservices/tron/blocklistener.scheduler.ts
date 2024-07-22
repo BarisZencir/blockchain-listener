@@ -22,9 +22,9 @@ export class BlockListenerScheduler implements OnModuleInit {
     }
 
     async onModuleInit(): Promise<void> {
-        this.blockGap = this.configService.get<BigNumber>("network.ethereum.blockGap");            
-        this.currentBlockNumber = this.configService.get<BigNumber>("network.ethereum.starterBlockNumber");
-        await this.blockListenerService.initService();         
+        this.blockGap = this.configService.get<BigNumber>("network.tron.blockGap");            
+        this.currentBlockNumber = this.configService.get<BigNumber>("network.tron.starterBlockNumber");
+        await this.blockListenerService.initService();                
         let latestProcessedBlockNumber = await this.blockListenerService.getLatestProccessedBlockNumber();
         if(latestProcessedBlockNumber) {
             if(this.currentBlockNumber.isLessThan(latestProcessedBlockNumber)) {

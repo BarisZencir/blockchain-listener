@@ -63,8 +63,13 @@ export class BitcoinService implements OnModuleInit {
 
 
 	async onModuleInit(): Promise<void> {		
+		await this.initService();
+	}
+
+	async initService(): Promise<void> {		
 		await this.connect();
 	}
+
 
     private async checkAndTryConnection(): Promise<void> {
         if (!this.isConnected()) {

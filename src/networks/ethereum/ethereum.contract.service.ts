@@ -49,21 +49,7 @@ export class EthereumContractService extends EthereumService implements OnModule
     }
 
 	async onModuleInit(): Promise<void> {
-		super.onModuleInit();
-        // console.log(erc20Abi)
-
-        this.tokenGroupIndex = parseInt(this.configService.get<string>("NETWORK_ETHEREUM_TOKEN_GROUP_INDEX"));
-        this.tokenGroupsForInit = new Map<string, string>();
-        if('undefined'!= typeof this.tokenGroupIndex) {
-            let tokenGroups = this.configService.get<Array<Map<string, string>>>("network.ethereum.tokenGroups")
-            if(this.tokenGroupIndex == -1) {
-                //main.
-                this.tokenGroupsForInit = tokenGroups.reduce((acc, map) => new Map([...acc, ...Array.from(map.entries())]), new Map());
-            } else if(this.tokenGroupIndex >= 0 && this.tokenGroupIndex < tokenGroups.length) {
-                this.tokenGroupsForInit = tokenGroups[this.tokenGroupIndex];
-            }
-        } 
-        this.initTokenContracts(this.tokenGroupsForInit);
+		await this.initService();
 
         // let blockNumber = await this.getBlockNumber();
         // console.log("blockNumber: " + blockNumber);
@@ -126,6 +112,22 @@ export class EthereumContractService extends EthereumService implements OnModule
         // let events = await this.getContractTransferEvents(EthereumTokenName.RNDR, 14025);
         // console.log(events);
 
+	}
+
+    async initService(): Promise<void> {		
+		await super.initService();
+        this.tokenGroupIndex = parseInt(this.configService.get<string>("NETWORK_ETHEREUM_TOKEN_GROUP_INDEX"));
+        this.tokenGroupsForInit = new Map<string, string>();
+        if('undefined'!= typeof this.tokenGroupIndex) {
+            let tokenGroups = this.configService.get<Array<Map<string, string>>>("network.ethereum.tokenGroups")
+            if(this.tokenGroupIndex == -1) {
+                //main.
+                this.tokenGroupsForInit = tokenGroups.reduce((acc, map) => new Map([...acc, ...Array.from(map.entries())]), new Map());
+            } else if(this.tokenGroupIndex >= 0 && this.tokenGroupIndex < tokenGroups.length) {
+                this.tokenGroupsForInit = tokenGroups[this.tokenGroupIndex];
+            }
+        } 
+        this.initTokenContracts(this.tokenGroupsForInit);
 	}
 
     override async checkAndTryConnection(): Promise<void> {

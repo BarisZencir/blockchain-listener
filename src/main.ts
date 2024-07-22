@@ -19,10 +19,10 @@ async function bootstrap() {
 
     app.setGlobalPrefix("api/v1/");
 
-    console.log("apiport:" + 3012)
-    await app.listen(3012);
+    console.log("apiport:" + 3032)
+    await app.listen(3032);
 
-    //startMicroservices(3201);
+    startMicroservices(3301);
     console.log("blocklistener started.");
 
 }

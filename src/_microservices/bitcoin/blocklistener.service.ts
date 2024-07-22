@@ -31,7 +31,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
     }
 
     async onModuleInit(): Promise<void> {
-        super.onModuleInit();
+        await super.initService();
 
         // let txId = await this.createTransaction(
 		// 	"bcrt1qefcv4stdjgfsg0s425a5k9wnmc8cg9mm0nxm4h",
@@ -59,7 +59,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
         let block = new Block();
         block.blockNumber = blockNumber.toString();
         block.blockchainName = BlockchainName.BITCOIN;
-        this.blockService.save(block);
+        await this.blockService.save(block);
     }
 
     async updateBlock(blockNumber: BigNumber) : Promise<void> {
@@ -68,7 +68,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
             groupIndex : -1
         })
         block.blockNumber = blockNumber.toString();
-        this.blockService.update(block);
+        await this.blockService.update(block);
     }
 
     async proccessBlock(blockNumber: BigNumber, latestBlockNumber : BigNumber): Promise<boolean> {

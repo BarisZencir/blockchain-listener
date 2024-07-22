@@ -39,21 +39,8 @@ export class TronContractService extends TronService implements OnModuleInit {
     }
 
     async onModuleInit(): Promise<void> {
-		await super.onModuleInit();
+		await super.initService();
         // console.log(erc20Abi)
-
-        this.tokenGroupIndex = parseInt(this.configService.get<string>("NETWORK_TRON_TOKEN_GROUP_INDEX"));
-        this.tokenGroupsForInit = new Map<string, string>();
-        if('undefined'!= typeof this.tokenGroupIndex) {
-            let tokenGroups = this.configService.get<Array<Map<string, string>>>("network.tron.tokenGroups")
-            if(this.tokenGroupIndex == -1) {
-                //main.
-                this.tokenGroupsForInit = tokenGroups.reduce((acc, map) => new Map([...acc, ...Array.from(map.entries())]), new Map());
-            } else if(this.tokenGroupIndex >= 0 && this.tokenGroupIndex < tokenGroups.length) {
-                this.tokenGroupsForInit = tokenGroups[this.tokenGroupIndex];
-            }
-        } 
-        this.initTokenContracts(this.tokenGroupsForInit);
 
         // let blockNumber = await this.getBlockNumber();
         // console.log("blockNumber: " + blockNumber);
@@ -128,6 +115,23 @@ export class TronContractService extends TronService implements OnModuleInit {
         // console.log(events);
         
     }
+
+
+    async initService(): Promise<void> {		
+		await super.initService();
+        this.tokenGroupIndex = parseInt(this.configService.get<string>("NETWORK_TRON_TOKEN_GROUP_INDEX"));
+        this.tokenGroupsForInit = new Map<string, string>();
+        if('undefined'!= typeof this.tokenGroupIndex) {
+            let tokenGroups = this.configService.get<Array<Map<string, string>>>("network.tron.tokenGroups")
+            if(this.tokenGroupIndex == -1) {
+                //main.
+                this.tokenGroupsForInit = tokenGroups.reduce((acc, map) => new Map([...acc, ...Array.from(map.entries())]), new Map());
+            } else if(this.tokenGroupIndex >= 0 && this.tokenGroupIndex < tokenGroups.length) {
+                this.tokenGroupsForInit = tokenGroups[this.tokenGroupIndex];
+            }
+        } 
+        this.initTokenContracts(this.tokenGroupsForInit);
+	}
 
     protected async checkAndTryConnection(): Promise<void> {
         if (!this.isConnected()) {

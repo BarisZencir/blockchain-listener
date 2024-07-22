@@ -41,10 +41,11 @@ export class TronService implements OnModuleInit {
 	}
 
 	async onModuleInit(): Promise<void> {
-		
-		await this.connect();
-        let isConnected = await this.isConnected();
-        console.log("isConnected: " + isConnected);
+
+		await this.initService();
+
+        // let isConnected = await this.isConnected();
+        // console.log("isConnected: " + isConnected);
 
         // let blockNumber = await this.getBlockNumber();
         // console.log("blockNumber: " + blockNumber);
@@ -71,6 +72,10 @@ export class TronService implements OnModuleInit {
 
         // balance = await this.getBalance("TNUt8WZT4iB7vJScdEZt2RzgXJa78G46uP");
         // console.log("balance(acc 2): " + balance);
+	}
+
+    async initService(): Promise<void> {		
+		await this.connect();
 	}
 
     protected async checkAndTryConnection(): Promise<void> {
@@ -127,15 +132,15 @@ export class TronService implements OnModuleInit {
 		}
 	}
 
-    async getBlockNumber(): Promise<number> {
+    async getBlockNumber(): Promise<BigNumber> {
         await this.checkAndTryConnection();
         const block = await this.tronWeb.trx.getCurrentBlock();
-        return block.block_header.raw_data.number;
+        return new BigNumber(block.block_header.raw_data.number);
     }
 
-    async getBlock(blockNumber: number): Promise<any> {
+    async getBlock(blockNumber: BigNumber): Promise<any> {
         await this.checkAndTryConnection();
-        return this.tronWeb.trx.getBlockByNumber(blockNumber);
+        return this.tronWeb.trx.getBlockByNumber(blockNumber.toNumber());
     }
 
     async getBalance(address: string): Promise<BigNumber> {
