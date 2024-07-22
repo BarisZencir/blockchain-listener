@@ -8,6 +8,10 @@ import { Transaction } from "src/transaction/transaction.model";
 import { from } from "rxjs";
 import { WalletService } from "src/wallet/wallet.service";
 import { Wallet } from "src/wallet/wallet.model";
+import { EthereumContractService } from "./ethereum/ethereum.contract.service";
+import { TronContractService } from "./tron/tron.contract.service";
+import { EthereumTokenName } from "./ethereum/enum/token.name";
+import { TronTokenName } from "./tron/enum/token.name";
 
 @Injectable()
 export class NetworkService implements OnModuleInit {
@@ -24,8 +28,8 @@ export class NetworkService implements OnModuleInit {
 		protected configService: ConfigService,
 		protected walletService : WalletService,
 		protected bitcoinService : BitcoinService,
-		protected ethereumService : EthereumService,
-		protected tronService: TronService
+		protected ethereumContractService : EthereumContractService,
+		protected tronContractService: TronContractService,
 	) {
 
 	}
@@ -54,70 +58,67 @@ export class NetworkService implements OnModuleInit {
 	}
 
 
-	async createTransaction(transaction : Transaction, blockchainName: BlockchainName, to: string, amounth: string) : Promise<Transaction> {
+	async createTransaction(blockchainName: BlockchainName, to: string, amounth: string) : Promise<Transaction> {
 		switch(blockchainName) {
 
 			case BlockchainName.BITCOIN : {
-				transaction = await this.bitcoinService.createTransaction(
-					transaction,
+				return await this.bitcoinService.createTransaction(
 					to,
 					amounth,
 					this.withdrawWallets[blockchainName]
 				)
-				break;
 			}
 
 			case BlockchainName.ETHEREUM : {
-				transaction = await this.ethereumService.createTransaction(
-					transaction,
+				return await this.ethereumContractService.createTransaction(
 					to,
 					amounth,
 					this.withdrawWallets[blockchainName]
 				)
-				break;
 			}
 
 			case BlockchainName.TRON : {
-				transaction = await this.tronService.createTransaction(
-					transaction,
+				return await this.tronContractService.createTransaction(
 					to,
 					amounth,
 					this.withdrawWallets[blockchainName]
 				)
-				break;
+
+			}
+
+		}
+	}
+
+	async createTokenTransaction(blockchainName: BlockchainName, tokenName : string, to: string, amounth: string) : Promise<Transaction> {
+
+		switch(blockchainName) {
+
+			case BlockchainName.BITCOIN : {
+				return new Transaction();
+			}
+
+			case BlockchainName.ETHEREUM : {
+				return await this.ethereumContractService.createTokenTransaction(
+					tokenName as EthereumTokenName,
+					to,
+					amounth,
+					this.withdrawWallets[blockchainName]
+				)
+			}
+
+			case BlockchainName.TRON : {
+				return await this.tronContractService.createTokenTransaction(
+					tokenName as TronTokenName,
+					to,
+					amounth,
+					this.withdrawWallets[blockchainName]
+				)
 
 			}
 
 		}
 
-		return transaction;
 	}
-
-
-	async createTokenTransaction(transaction : Transaction, blockchainName: BlockchainName, tokenName : string, to: string, amounth: string) : Promise<Transaction> {
-
-		switch(blockchainName) {
-
-			case BlockchainName.BITCOIN : {
-
-				break;
-			}
-
-			case BlockchainName.ETHEREUM : {
-
-				break;
-			}
-
-			case BlockchainName.TRON : {
-
-				break;
-			}
-
-		}
-
-		return transaction;
-	}
-
 
 
 }

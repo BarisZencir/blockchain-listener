@@ -136,9 +136,10 @@ export class EthereumService implements OnModuleInit {
     }
 
     
-    async createTransaction(transaction : Transaction, to: string, amount: string, _signer: Wallet): Promise<Transaction> {
-        try {
+    async createTransaction(to: string, amount: string, _signer: Wallet): Promise<Transaction> {
+		let transaction = new Transaction();
 
+        try {
             await this.checkAndTryConnection();
             const txCount = await this.web3!.eth.getTransactionCount(_signer.address);
             let value = this.web3.utils.numberToHex(this.web3!.utils.toWei(amount, 'ether'));

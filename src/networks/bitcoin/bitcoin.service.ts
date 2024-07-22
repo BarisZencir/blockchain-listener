@@ -171,7 +171,8 @@ export class BitcoinService implements OnModuleInit {
 	
 	// İşlem oluşturma işlevi
 	// amount örnek: "0.1" btc
-	async createTransaction(transaction : Transaction, to: string, amount: string, _signer: Wallet): Promise<Transaction> {
+	async createTransaction(to: string, amount: string, _signer: Wallet): Promise<Transaction> {
+		let transaction = new Transaction();
 		try {
 			// Adım 1: UTXO'ları MongoDB'den alın
 			const utxos = await this.utxoService.findByAddressAndState(BlockchainName.BITCOIN, _signer.address, UtxoState.UN_SPENT);

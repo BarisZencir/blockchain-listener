@@ -149,12 +149,15 @@ export class TronService implements OnModuleInit {
         return BigNumber(balance);
     }
 
-    async createTransaction(transaction : Transaction, to: string, amount: string, _signer: Wallet): Promise<Transaction> {
-        await this.checkAndTryConnection();
+    async createTransaction(to: string, amount: string, _signer: Wallet): Promise<Transaction> {
 
-        let value = this.tronWeb.toSun(amount);
-        // const tradeObj = await this.tronWeb.trx.getTransactionObject(from, to, value);
+        let transaction = new Transaction();
+
         try {
+            await this.checkAndTryConnection();
+    
+            let value = this.tronWeb.toSun(amount);
+            // const tradeObj = await this.tronWeb.trx.getTransactionObject(from, to, value);
             const tradeObj = await this.tronWeb.transactionBuilder.sendTrx(
                 to,
                 parseInt(value),

@@ -3,9 +3,10 @@ import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, Matches, MaxLength } 
 import { BlockchainName } from 'src/_common/enums/blockchain.name.enums';
 
 
-export class StartWithdrawRequest {
+export class CreateWithdrawTransactionRequest {
     requestId : string;
     blockchainName : BlockchainName;
+    tokenName? : string;
     to : string;
     amounth : string;
 }

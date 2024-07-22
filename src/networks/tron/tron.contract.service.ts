@@ -189,7 +189,7 @@ export class TronContractService extends TronService implements OnModuleInit {
         }
     }
 
-    async transfer(tokenName: TronTokenName, to: string, amount: string, _signer: Pick<Wallet, 'address' | 'privateKey'>): Promise<any> {
+    async createTokenTransaction(tokenName: TronTokenName, to: string, amount: string, _signer: Pick<Wallet, 'address' | 'privateKey'>): Promise<any> {
         await this.checkAndTryConnection();
         let contract = this.tokenContracts.get(tokenName);
 

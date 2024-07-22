@@ -219,7 +219,7 @@ export class EthereumContractService extends EthereumService implements OnModule
     //     }
     // }
 
-    async transfer(tokenName: EthereumTokenName, to: string, amount: string, _signer : Pick<Wallet, 'address' | 'privateKey' | 'nonce'>): Promise<any> {
+    async createTokenTransaction(tokenName: EthereumTokenName, to: string, amount: string, _signer : Pick<Wallet, 'address' | 'privateKey' | 'nonce'>): Promise<any> {
         await this.checkAndTryConnection();
         let contract = this.tokenContracts.get(tokenName);
         const txCount = await this.web3!.eth.getTransactionCount(_signer.address); //note: simdilik boyle de bunu wallettan yonetecez.
