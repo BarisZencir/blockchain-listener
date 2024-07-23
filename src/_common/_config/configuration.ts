@@ -64,7 +64,9 @@ export default () => ({
             password : process.env.NETWORK_BITCOIN_PASSWORD,
             starterBlockNumber : new BigNumber(process.env.NETWORK_BITCOIN_STARTER_BLOCK_NUMBER || 0),
             blockGap : new BigNumber(process.env.NETWORK_BITCOIN_LISTENER_BLOCK_GAP || 0),
-            satoshiFee : new BigNumber(process.env.NETWORK_BITCOIN_SATOSHI_FEE || 0)
+            satoshiFee : new BigNumber(process.env.NETWORK_BITCOIN_SATOSHI_FEE || 0),
+            batchLimit : parseInt(process.env.NETWORK_BITCOIN_LISTENER_BATCH_LIMIT || "10"),
+
         },
         ethereum : {
             ws: process.env.NETWORK_ETHEREUM_WS,
@@ -72,7 +74,8 @@ export default () => ({
             networkId: parseInt(process.env.NETWORK_ETHEREUM_NETWORK_ID),
             starterBlockNumber : new BigNumber(process.env.NETWORK_ETHEREUM_STARTER_BLOCK_NUMBER || 0),
             blockGap : new BigNumber(process.env.NETWORK_ETHEREUM_LISTENER_BLOCK_GAP || 0),
-            tokenGroups : generateTokenGroups(BlockchainName.ETHEREUM)
+            tokenGroups : generateTokenGroups(BlockchainName.ETHEREUM),
+            batchLimit : parseInt(process.env.NETWORK_ETHEREUM_LISTENER_BATCH_LIMIT || "10"),
         },
         tron : {
             fullHost: process.env.NETWORK_TRON_FULL_NODE,
@@ -80,7 +83,8 @@ export default () => ({
             // apiPrivateKey: process.env.NETWORK_TRON_API_PRIVATE_KEY,
             starterBlockNumber : new BigNumber(process.env.NETWORK_TRON_STARTER_BLOCK_NUMBER || 0),
             blockGap : new BigNumber(process.env.NETWORK_ETHEREUM_TOKEN_GROUP_INDEX || 0),
-            tokenGroups : generateTokenGroups(BlockchainName.TRON)
+            tokenGroups : generateTokenGroups(BlockchainName.TRON),
+            batchLimit : parseInt(process.env.NETWORK_TRON_LISTENER_BATCH_LIMIT || "10"),
         }
 
     }

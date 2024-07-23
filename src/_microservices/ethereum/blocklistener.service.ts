@@ -59,27 +59,27 @@ export class BlockListenerService extends EthereumService implements OnModuleIni
         await this.blockService.update(block);
     }
 
-    async proccessBlock(blockNumber: BigNumber, latestBlockNumber : BigNumber): Promise<boolean> {
+    async proccessBlock(transactions : Transaction[][], batchIndex : number, blockNumber: BigNumber, latestBlockNumber : BigNumber): Promise<void> {
 
         this.logger.debug('Ethereum block processed. blockNumber: ' + blockNumber);
         
         try {
             
-            let hasTransaction = false;
+            transactions[batchIndex] = new Array<Transaction>();
             const blockJSON = await this.getBlock(blockNumber);
             if (!blockJSON) {
                 throw new Error(`Err1. in Ethereum processBlock. blockNumber: ${blockNumber}`);
             }
 
             const transactionHashList = blockJSON.transactions || [];
-
+            let txHash : string;
             for (let i = 0; i < transactionHashList.length; i++) {
                 try {
                     const txJSON = await this.getTransaction(transactionHashList[i]);
 
                     let fromWallet = await this.walletService.findByAddress(BlockchainName.ETHEREUM, txJSON.from);
                     let toWallet = await this.walletService.findByAddress(BlockchainName.ETHEREUM, txJSON.to);
-
+                    txHash = txJSON.hash;
                     if (fromWallet) {
                         // WITHDRAW + VIRMAN
                         const transaction = await this.transactionService.findByTxHash(BlockchainName.ETHEREUM, txJSON.hash);
@@ -93,9 +93,8 @@ export class BlockListenerService extends EthereumService implements OnModuleIni
                             transaction.fee = new BigNumber(txJSON.gasPrice).multipliedBy(new BigNumber(txJSON.gas)).toString();
                             transaction.processedBlockNumber = String(txJSON.blockNumber);
                             transaction.complatedBlockNumber = blockNumber.toString();
-                            await this.transactionService.update(transaction);
+                            transactions[batchIndex].push(transaction);            
 
-                            hasTransaction = true;
                         }
                     } else if (toWallet) {
                         // DEPOSIT
@@ -115,20 +114,28 @@ export class BlockListenerService extends EthereumService implements OnModuleIni
                         transaction.fee = new BigNumber(txJSON.gasPrice).multipliedBy(new BigNumber(txJSON.gas)).toString();
                         transaction.processedBlockNumber = blockNumber.toString();
                         transaction.complatedBlockNumber = latestBlockNumber.toString();
+                        transactions[batchIndex].push(transaction);            
 
-                        await this.transactionService.save(transaction);
-                        hasTransaction = true;
                     }
                 } catch (error) {
-                    //TODO: blockta hata alindi bunu db'ye yazalim.
-                    throw error;
+                    let transaction = new Transaction();
+                    transaction.processedBlockNumber = blockNumber.toString();
+                    transaction.blockchainName = BlockchainName.ETHEREUM;
+                    transaction.state = TransactionState.COMPLATED;
+                    transaction.hash = txHash;
+                    transaction.hasError = true;
+                    transaction.error = error?.message;
+                    transactions[batchIndex].push(transaction);  
                 }
             }
-
-            await this.updateBlock(blockNumber);
-            return hasTransaction;
         } catch (error) {
-            throw error;
+            let transaction = new Transaction();
+            transaction.processedBlockNumber = blockNumber.toString();
+            transaction.blockchainName = BlockchainName.ETHEREUM;
+            transaction.state = TransactionState.COMPLATED;
+            transaction.hasError = true;
+            transaction.error = error?.message;
+            transactions[batchIndex].push(transaction);  
         }
     }
 }

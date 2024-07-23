@@ -71,13 +71,14 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
         await this.blockService.update(block);
     }
 
-    async proccessBlock(blockNumber: BigNumber, latestBlockNumber : BigNumber): Promise<boolean> {
+    async proccessBlock(transactions : Transaction[][], utxos : Utxo[][], batchIndex : number, blockNumber: BigNumber, latestBlockNumber : BigNumber): Promise<void> {
 
         this.logger.debug('Bitcoin block processed. blockNumber: ' + blockNumber);
         
         try {
             
-            let hasTransaction = false;
+            transactions[batchIndex] = new Array<Transaction>();
+            utxos[batchIndex] = new Array<Utxo>();
             const blockJSON = await this.getBlock(blockNumber);
             if (!blockJSON) {
                 throw new Error(`Err1. in Bitcoin processBlock. blockNumber: ${blockNumber}`);
@@ -90,6 +91,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
             }
 
             for (let i = 0; i < transactionHashList.length; i++) {
+                let txid: string;
                 try {
 
                     const txJSON = await this.getRawTransaction(transactionHashList[i]);
@@ -98,7 +100,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
                         continue;
                     }
 
-                    let txid = txJSON.txid;
+                    txid = txJSON.txid;
 
                     let vinTxIds = [];
                     let vinAddresses = [];
@@ -169,12 +171,10 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
                         utxo.address = toWallet.address;
                         utxo.blockchainName = toWallet.blockchainName;
                         utxo.amount = (new BigNumber(voutValues[utxo.vout])).toString();
-                        utxo.state = UtxoState.UN_SPENT;                            
-                        await this.utxoService.save(utxo);
-                        hasTransaction = true;
+                        utxo.state = UtxoState.UN_SPENT;
+                        utxos[batchIndex].push(utxo);                        
                     
                         let transaction = new Transaction();
- 
                         transaction.blockchainName = utxo.blockchainName;
                         transaction.state = TransactionState.COMPLATED;
                         transaction.type = TransactionType.DEPOSIT;
@@ -188,9 +188,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
                         transaction.fee = fee.toString();
                         transaction.processedBlockNumber = blockNumber.toString();
                         transaction.complatedBlockNumber = latestBlockNumber.toString();
-
-                        await this.transactionService.save(transaction);
-
+                        transactions[batchIndex].push(transaction);
                     }
 
                     if(isExistsVinWallet) {
@@ -208,7 +206,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
                             if(utxo) {
                                 utxo.state = UtxoState.SPENT;
                                 utxo.usedTxid = txid;
-                                await this.utxoService.update(utxo);
+                                utxos[batchIndex].push(utxo);
                             }
                             
                         }
@@ -227,8 +225,9 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
                                 utxo.scriptPubKey = voutScriptPubKeys[utxo.vout];
                                 utxo.blockchainName = toWallet.blockchainName;
                                 utxo.amount = (new BigNumber(voutValues[utxo.vout])).toString();
-                                utxo.state = UtxoState.UN_SPENT;                            
-                                await this.utxoService.save(utxo);    
+                                utxo.state = UtxoState.UN_SPENT;
+                                utxos[batchIndex].push(utxo);
+
                             }
                         }
 
@@ -257,10 +256,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
                                 transaction.fee = fee.toString();
                                 transaction.processedBlockNumber = blockNumber.toString();
                                 transaction.complatedBlockNumber = latestBlockNumber.toString();        
-                                await this.transactionService.update(transaction);
-        
-                                hasTransaction = true;
-                            }
+                                transactions[batchIndex].push(transaction);                            }
 
                         } else {
                             //nsa'da buraya girmez.
@@ -270,16 +266,24 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
                     }
                     
                 } catch (error) {
-                    //TODO: blockta hata alindi bunu db'ye yazalim.
-                    throw error;
+                    let transaction = new Transaction();
+                    transaction.processedBlockNumber = blockNumber.toString();
+                    transaction.blockchainName = BlockchainName.BITCOIN;
+                    transaction.state = TransactionState.COMPLATED;
+                    transaction.hash = txid;
+                    transaction.hasError = true;
+                    transaction.error = error?.message;
+                    transactions[batchIndex].push(transaction); 
                 }
             }
-
-            await this.updateBlock(blockNumber);
-            return hasTransaction;
         } catch (error) {
-            throw error;
-        }
+            let transaction = new Transaction();
+            transaction.processedBlockNumber = blockNumber.toString();
+            transaction.blockchainName = BlockchainName.BITCOIN;
+            transaction.state = TransactionState.COMPLATED;
+            transaction.hasError = true;
+            transaction.error = error?.message;
+            transactions[batchIndex].push(transaction);         }
     }
 
 }

@@ -69,13 +69,13 @@ export class BlockListenerService extends TronContractService implements OnModul
         await this.blockService.update(block);
     }
 
-    async proccessBlock(blockNumber: BigNumber, latestBlockNumber : BigNumber): Promise<boolean> {
+    async proccessBlock(transactions : Transaction[][], batchIndex : number, blockNumber: BigNumber, latestBlockNumber : BigNumber): Promise<void> {
 
         this.logger.debug('Tron( token group index: '+ this.tokenGroupIndex +') block processed. blockNumber: ' + blockNumber);
         
         try {
             let events = new Array<ITransferEvent>();
-            let hasTransaction = false;
+            transactions[batchIndex] = new Array<Transaction>();
 
             for(let tokenName of this.availableTokenNames) {
                 let tokenEvents = await this.getContractTransferEvents(tokenName, blockNumber.toNumber());
@@ -85,10 +85,12 @@ export class BlockListenerService extends TronContractService implements OnModul
             }
 
             for (let event of events) {
+                let txId = event.transactionHash;
                 try {
+                    
                     let fromWallet = await this.walletService.findByAddress(BlockchainName.TRON, event.from);
                     let toWallet = await this.walletService.findByAddress(BlockchainName.TRON, event.to);
-  
+                    
                     if (fromWallet) {
                         // WITHDRAW + VIRMAN
                         const transaction = await this.transactionService.findByTxHash(BlockchainName.TRON, event.transactionHash);
@@ -104,9 +106,7 @@ export class BlockListenerService extends TronContractService implements OnModul
                             transaction.fee = receipt.fee;
                             transaction.processedBlockNumber = blockNumber.toString();
                             transaction.complatedBlockNumber = latestBlockNumber.toString();
-                            await this.transactionService.update(transaction);
-
-                            hasTransaction = true;
+                            transactions[batchIndex].push(transaction);
                         }
                     } else if (toWallet) {
                         // DEPOSIT
@@ -129,20 +129,27 @@ export class BlockListenerService extends TronContractService implements OnModul
                         transaction.fee = receipt.fee;
                         transaction.processedBlockNumber = blockNumber.toString();
                         transaction.complatedBlockNumber = latestBlockNumber.toString();
-
-                        await this.transactionService.save(transaction);
-                        hasTransaction = true;
+                        transactions[batchIndex].push(transaction);
                     }
                 } catch (error) {
-                    //TODO: blockta hata alindi bunu db'ye yazalim.
-                    throw error;
-                }
+                    let transaction = new Transaction();
+                    transaction.processedBlockNumber = blockNumber.toString();
+                    transaction.blockchainName = BlockchainName.TRON;
+                    transaction.tokenName = event.tokenName;
+                    transaction.state = TransactionState.COMPLATED;
+                    transaction.hash = txId;
+                    transaction.hasError = true;
+                    transaction.error = error?.message;
+                    transactions[batchIndex].push(transaction);                  }
             }
-            
-            await this.updateBlock(blockNumber);
-            return true;
         } catch (error) {
-            throw error;
+            let transaction = new Transaction();
+            transaction.processedBlockNumber = blockNumber.toString();
+            transaction.blockchainName = BlockchainName.TRON;
+            transaction.state = TransactionState.COMPLATED;
+            transaction.hasError = true;
+            transaction.error = error?.message;
+            transactions[batchIndex].push(transaction);  
         }
     }
 }

@@ -59,13 +59,13 @@ export class BlockListenerService extends TronService implements OnModuleInit {
         await this.blockService.update(block);
     }
 
-    async proccessBlock(blockNumber: BigNumber, latestBlockNumber : BigNumber): Promise<boolean> {
+    async proccessBlock(transactions : Transaction[][], batchIndex : number, blockNumber: BigNumber, latestBlockNumber : BigNumber): Promise<void> {
 
         this.logger.debug('Tron block processed. blockNumber: ' + blockNumber);
         
         try {
-            
-            let hasTransaction = false;
+
+            transactions[batchIndex] = new Array<Transaction>();
             const blockJson = await this.getBlock(blockNumber);
             if (!blockJson) {
                 throw new Error(`Err1. in Tron processBlock. blockNumber: ${blockNumber}`);
@@ -74,6 +74,7 @@ export class BlockListenerService extends TronService implements OnModuleInit {
             if (blockJson && blockJson.transactions) {
                 for (let i = 0; i < blockJson.transactions.length; i++) {
                     const txJson = blockJson.transactions[i];
+                    const txId = txJson.txID;
                     try {
                         if (txJson.raw_data.contract[0].type === 'TransferContract') {
                             const { owner_address, to_address, amount } = txJson.raw_data.contract[0].parameter.value;
@@ -81,7 +82,6 @@ export class BlockListenerService extends TronService implements OnModuleInit {
                             const fromAddress = this.tronWeb.address.fromHex(owner_address);
                             const toAddress = this.tronWeb.address.fromHex(to_address);
             
-                            const txId = txJson.txID;
             
                             // console.log(`Transaction found in block ${blockNumber}:`);
                             // console.log(`TXID: ${txId}`);
@@ -107,9 +107,7 @@ export class BlockListenerService extends TronService implements OnModuleInit {
                                     transaction.fee = receipt.fee;
                                     transaction.processedBlockNumber = blockNumber.toString();
                                     transaction.complatedBlockNumber = latestBlockNumber.toString();
-                                    await this.transactionService.update(transaction);
-            
-                                    hasTransaction = true;
+                                    transactions[batchIndex].push(transaction);
                                 }
                             } else if (toWallet) {
                                 // DEPOSIT
@@ -130,22 +128,30 @@ export class BlockListenerService extends TronService implements OnModuleInit {
                                 transaction.fee = receipt.fee;
                                 transaction.processedBlockNumber = blockNumber.toString();
                                 transaction.complatedBlockNumber = latestBlockNumber.toString();
-            
-                                await this.transactionService.save(transaction);
-                                hasTransaction = true;
+                                transactions[batchIndex].push(transaction);  
                             }
                         }
                     } catch(error) {
-                        //TODO: blockta hata alindi bunu db'ye yazalim.
-                        throw error;
+                        let transaction = new Transaction();
+                        transaction.processedBlockNumber = blockNumber.toString();
+                        transaction.blockchainName = BlockchainName.TRON;
+                        transaction.state = TransactionState.COMPLATED;
+                        transaction.hash = txId;
+                        transaction.hasError = true;
+                        transaction.error = error?.message;
+                        transactions[batchIndex].push(transaction);  
                     }
                 }
             }
 
-            await this.updateBlock(blockNumber);
-            return hasTransaction;
         } catch (error) {
-            throw error;
+            let transaction = new Transaction();
+            transaction.processedBlockNumber = blockNumber.toString();
+            transaction.blockchainName = BlockchainName.TRON;
+            transaction.state = TransactionState.COMPLATED;
+            transaction.hasError = true;
+            transaction.error = error?.message;
+            transactions[batchIndex].push(transaction);  
         }
     }
 }
