@@ -4,8 +4,10 @@ import { GetFreeAddressRequest, IsAddressExistsRequest } from "./dto/wallet.requ
 import { WalletService } from "./wallet.service";
 import { BlockchainName } from "src/_common/enums/blockchain.name.enums";
 import { Wallet } from "./wallet.model";
+import { HttpExceptionFilter } from "src/_core/filters/http-exception.filter";
 
 @Controller('wallet')
+@UseFilters(HttpExceptionFilter)
 export class WalletController {
 
     private readonly logger = new Logger(WalletController.name);

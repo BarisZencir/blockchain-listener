@@ -34,6 +34,7 @@
     "bip39": "^3.1.0",
     "bitcoin-core": "^4.2.0",
     "bitcoinjs-lib": "^6.1.6",
+    "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "ethereumjs-common": "^1.5.2",
     "ethereumjs-tx": "^2.1.2",

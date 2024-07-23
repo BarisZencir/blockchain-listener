@@ -5,8 +5,10 @@ import { Transaction } from "./transaction.model";
 import { NetworkService } from "src/networks/network.service";
 import { CreateWithdrawTransactionRequest, GetNotReadTransactionsRequest, UpdateTransactionAsReadRequest } from "./dto/transaction.request.dto";
 import { CreateWithdrawTransactionResponse, GetNotReadTransactionsResponseItem, UpdateTransactionAsReadResponse } from "./dto/transaction.response.dto";
+import { HttpExceptionFilter } from "src/_core/filters/http-exception.filter";
 
 @Controller('transaction')
+@UseFilters(HttpExceptionFilter)
 export class TransactionController {
 
     private readonly logger = new Logger(TransactionController.name);

@@ -15,6 +15,7 @@ import { UtxoModule } from './utxo/utxo.module';
 import { EthereumModule } from './networks/ethereum/ethereum.module';
 import { TronModule } from './networks/tron/tron.module';
 import { BitcoinModule } from './networks/bitcoin/bitcoin.module';
+import { CoreModule } from './_core/core.module';
 @Module({
     imports: [
         ConfigModule.forRoot({
@@ -29,6 +30,7 @@ import { BitcoinModule } from './networks/bitcoin/bitcoin.module';
             }),
             inject: [ConfigService],
         }),
+        CoreModule,
         ScheduleModule.forRoot(),
         BlockModule,
         WalletModule,
