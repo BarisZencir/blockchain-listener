@@ -32,6 +32,8 @@ export class BlockListenerScheduler implements OnModuleInit {
     async onModuleInit(): Promise<void> {
         this.blockGap = this.configService.get<BigNumber>("network.bitcoin.blockGap");            
         this.currentBlockNumber = this.configService.get<BigNumber>("network.bitcoin.starterBlockNumber");
+        this.batchLimit = this.configService.get<number>("network.bitcoin.batchLimit");
+
         await this.blockListenerService.initService();         
         let latestProcessedBlockNumber = await this.blockListenerService.getLatestProccessedBlockNumber();
         if(latestProcessedBlockNumber) {
