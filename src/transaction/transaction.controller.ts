@@ -6,6 +6,8 @@ import { NetworkService } from "src/networks/network.service";
 import { CreateWithdrawTransactionRequest, GetNotReadTransactionsRequest, UpdateTransactionAsReadRequest } from "./dto/transaction.request.dto";
 import { CreateWithdrawTransactionResponse, GetNotReadTransactionsResponseItem, UpdateTransactionAsReadResponse } from "./dto/transaction.response.dto";
 import { HttpExceptionFilter } from "src/_core/filters/http-exception.filter";
+import { ApiException } from "src/_common/api/api.exeptions";
+import { ApiError } from "src/_common/api/api.error";
 
 @Controller('transaction')
 @UseFilters(HttpExceptionFilter)
@@ -31,7 +33,7 @@ export class TransactionController {
         });
 
         if(isExistRequestId) {
-            throw Error("this requestId exists.");
+            throw ApiException.buildFromApiError(ApiError.TRANSACTION_REQUEST_ID_EXISTS);
         }
         
         if(request.tokenName) {
@@ -127,7 +129,7 @@ export class TransactionController {
         });
         
         if(!transaction) {
-            throw Error("there is no transaction");            
+            throw ApiException.buildFromApiError(ApiError.TRANSACTION_NOT_EXISTS);
         }
 
         if(transaction.isRead) {

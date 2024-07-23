@@ -22,7 +22,7 @@ export class TransformInterceptor<T>
   ): Observable<Response<T>> {
     // console.log("TransformInterceptor calistirildi.");
     return next.handle().pipe(map(data =>  
-      ({ data : data, timestamp: new Date().toISOString()})
+      ({statusCode : 200,  data : data, timestamp: new Date().toISOString()})
       ));          
   }
 }

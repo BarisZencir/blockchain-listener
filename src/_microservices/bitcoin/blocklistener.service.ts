@@ -86,7 +86,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
             const transactionHashList = blockJSON.tx || [];
 
             if(transactionHashList.length > 1) {
-                 console.log("block has tx");
+                this.logger.debug("block has tx");
             }
 
             for (let i = 0; i < transactionHashList.length; i++) {

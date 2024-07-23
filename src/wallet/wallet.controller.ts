@@ -5,6 +5,8 @@ import { WalletService } from "./wallet.service";
 import { BlockchainName } from "src/_common/enums/blockchain.name.enums";
 import { Wallet } from "./wallet.model";
 import { HttpExceptionFilter } from "src/_core/filters/http-exception.filter";
+import { ApiException } from "src/_common/api/api.exeptions";
+import { ApiError } from "src/_common/api/api.error";
 
 @Controller('wallet')
 @UseFilters(HttpExceptionFilter)
@@ -26,7 +28,12 @@ export class WalletController {
         let response = new GetFreeAddressResponse();
 
         let nextWallet = await this.walletService.findNextAvailableAddressAndUpdate(request.blockchainName);
-        console.log("nextWallet : " + nextWallet);
+
+        if(!nextWallet) {
+            throw ApiException.buildFromApiError(ApiError.NO_FREE_WALLET_EXISTS);
+        }
+
+        this.logger.debug("nextWallet : " + nextWallet);
         if(nextWallet) {            
             response.index = nextWallet.index;
             response.blockchainName = nextWallet.blockchainName;

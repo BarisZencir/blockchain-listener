@@ -1,6 +1,12 @@
 import { Transaction } from "../transaction.model";
 
 
+export class CreateWithdrawTransactionResponse {
+
+    id : Transaction["id"];
+    isNetworkReturnSuccess : boolean;
+}
+
 export class GetNotReadTransactionsResponseItem {
 
     id : Transaction["id"];
@@ -19,15 +25,7 @@ export class GetNotReadTransactionsResponseItem {
     requestedBlockNumber : Transaction["requestedBlockNumber"];
     processedBlockNumber : Transaction["processedBlockNumber"];
     complatedBlockNumber : Transaction["complatedBlockNumber"];
-
 }
-
-export class CreateWithdrawTransactionResponse {
-
-    id : Transaction["id"];
-    isNetworkReturnSuccess : boolean;
-}
-
 
 export class UpdateTransactionAsReadResponse {
     id : Transaction["id"];
