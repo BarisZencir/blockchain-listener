@@ -193,7 +193,9 @@ export class TronContractService extends TronService implements OnModuleInit {
         await this.checkAndTryConnection();
         let contract = this.tokenContracts.get(tokenName);
 
-        const tx = await contract.methods.transfer(to, amount).send({}, _signer.privateKey);
+        let value = this.tronWeb.toSun(amount);
+
+        const tx = await contract.methods.transfer(to, value).send({}, _signer.privateKey);
 
         const receipt = await this.getTransactionInfo(tx);
 
@@ -202,7 +204,7 @@ export class TronContractService extends TronService implements OnModuleInit {
         transaction.tokenName = tokenName;
         transaction.hash = tx;
         transaction.state = TransactionState.REQUESTED;
-        transaction.estimatedAmount = amount;
+        transaction.estimatedAmount = value;
         transaction.estimatedFee = receipt?.fee;
         let toWallet = await this.walletService.findOne({
             blockchainName: BlockchainName.TRON,
