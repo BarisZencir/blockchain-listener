@@ -53,6 +53,7 @@ export class WalletController {
         this.logger.debug("getFreeAddress started.");
         return this.walletService.exists({
             blockchainName : request.blockchainName,
+            address : request.address,
             available : false
         });
     }
