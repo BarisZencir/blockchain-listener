@@ -37,9 +37,9 @@ export class TransactionController {
         }
         
         if(request.tokenName) {
-            transaction = await this.networkService.createTokenTransaction(request.blockchainName, request.tokenName, request.to, request.amounth);
+            transaction = await this.networkService.createTokenTransaction(request.blockchainName, request.tokenName, request.to, request.amount);
         } else {
-            transaction = await this.networkService.createTransaction(request.blockchainName, request.to, request.amounth);
+            transaction = await this.networkService.createTransaction(request.blockchainName, request.to, request.amount);
         }
         transaction.withdrawRequestId = request.requestId;
         transaction = await this.transactionService.save(transaction);

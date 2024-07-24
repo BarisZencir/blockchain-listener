@@ -13,11 +13,10 @@ export class TransactionsRepository extends Repository<Transaction, TransactionD
     }
 
     async findByTxHash(blockchainName : Transaction["blockchainName"], hash: Transaction["hash"]) : Promise<Transaction> {
-        return this.mongoModel.findOne({ 
+        return await this.findOne({ 
             blockchainName : blockchainName,
             hash : hash
-        })
-        .lean();
+        });
     }
 
 }

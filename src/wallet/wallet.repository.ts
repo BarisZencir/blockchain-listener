@@ -19,7 +19,7 @@ export class WalletRepository extends Repository<Wallet, WalletDocument>{
             blockchainName : blockchainName,
             available: true })
         .sort({ index: 1 })
-        .lean();
+        .lean({virtuals: true, autopopulate: true});
     }
 
     async findByAddress(blockchainName: Wallet["blockchainName"], address: Wallet["address"]): Promise<Wallet> {
@@ -27,7 +27,7 @@ export class WalletRepository extends Repository<Wallet, WalletDocument>{
             blockchainName: blockchainName,
             address: { $regex: new RegExp(`^${address}$`, 'i') } // Case insensitive search
         })
-        .lean();
+        .lean({virtuals: true, autopopulate: true});
     }
 
 }

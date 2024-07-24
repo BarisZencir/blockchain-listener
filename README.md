@@ -68,7 +68,7 @@ req: {
     blockchainName : BlockchainName;
     tokenName? : string;
     to : string;
-    amounth : string;
+    amount : string;
 }
 
 res.data: {

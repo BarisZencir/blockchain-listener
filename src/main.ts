@@ -6,6 +6,16 @@ import { startMicroservices } from './_microservices/microservice.manager';
 import { AllExceptionsFilter } from './_core/filters/all-exception.filter';
 import { ValidationPipe } from './_core/pipes/validation.pipe';
 
+
+// import { Query } from 'mongoose';
+// var __setOptions = Query.prototype.setOptions;
+
+// Query.prototype.setOptions = function(options: any) {
+//   __setOptions.apply(this, arguments)
+//   if (!this.mongooseOptions().lean) this.mongooseOptions().lean = { virtuals: true }
+//   return this
+// }
+
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, {
         bufferLogs: true,

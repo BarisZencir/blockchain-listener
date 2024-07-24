@@ -19,7 +19,7 @@ export class UtxoRepository extends Repository<Utxo, UtxoDocument>{
             blockchainName: blockchainName,
             address: { $regex: new RegExp(`^${address}$`, 'i') } // Case insensitive search
         })
-        .lean();
+        .lean({virtuals: true, autopopulate: true});
     }
 
     async findByAddressAndState(blockchainName: Utxo["blockchainName"], address: Utxo["address"], state : UtxoState): Promise<Utxo[]> {
@@ -28,7 +28,7 @@ export class UtxoRepository extends Repository<Utxo, UtxoDocument>{
             address: { $regex: new RegExp(`^${address}$`, 'i') }, // Case insensitive search
             state : state
         })
-        .lean();
+        .lean({virtuals: true, autopopulate: true});
     }
 
 }

@@ -66,9 +66,9 @@ export function createSchema<TClass extends BaseModel = any>(target: Type<TClass
         data.updatedDate = new Date();
     });
 
-    // schema.virtual('xid').get(function() {
-    //     return this._id.toString();
-    // });
+    schema.virtual('id').get(function() {
+        return this._id?.toString();
+    });
 
     //not: main.js'e var __setOptions = Query.prototype.setOptions; bak.
     schema.plugin(require('mongoose-lean-virtuals'));

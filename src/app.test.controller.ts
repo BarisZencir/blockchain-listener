@@ -57,7 +57,8 @@ export class AppTestController implements OnModuleInit {
       const rpcPassword = '123456';
       const regtest = '-regtest';
       
-      const command = `bitcoin-cli -rpcconnect=${rpcConnect} -rpcport=${rpcPort} -rpcuser=${rpcUser} -rpcpassword=${rpcPassword} ${regtest} sendtoaddress ${to} ${amount}`;
+    //   const command = `bitcoin-cli -rpcconnect=${rpcConnect} -rpcport=${rpcPort} -rpcuser=${rpcUser} -rpcpassword=${rpcPassword} ${regtest} sendtoaddress ${to} ${amount}`;
+      const command = `/root/bitcoin-0.21.1/bin/bitcoin-cli -rpcport=${rpcPort} -rpcuser=${rpcUser} -rpcpassword=${rpcPassword} ${regtest} sendtoaddress ${to} ${amount}`;
   
       return new Promise((resolve, reject) => {
         exec(command, (error, stdout, stderr) => {

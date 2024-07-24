@@ -12,7 +12,7 @@ export class Repository<M extends BaseModel, D extends M & Document> {
     
     async exists(filter: any): Promise<boolean> {
         filter = filter || {};
-        let result = await this.mongoModel.findOne(filter).lean({ autopopulate: true });        
+        let result = await this.mongoModel.findOne(filter).lean({ virtuals: true, autopopulate: true });        
         return !!result;
     }
 
@@ -22,26 +22,26 @@ export class Repository<M extends BaseModel, D extends M & Document> {
 
     async find(filter: any): Promise<(M)[]> {
         filter = filter || {};
-        return this.mongoModel.find(filter).lean({ autopopulate: true });
+        return this.mongoModel.find(filter).lean({ virtuals: true, autopopulate: true });
     }
 
     async findByLimit(filter: any, limit : number): Promise<(M)[]> {
         filter = filter || {};
-        return this.mongoModel.find(filter).limit(limit).lean({ autopopulate: true });
+        return this.mongoModel.find(filter).limit(limit).lean({ virtuals: true, autopopulate: true });
     }
 
     
     async findAll(): Promise<(M)[]> {
-        return this.mongoModel.find().lean({ autopopulate: true });
+        return this.mongoModel.find().lean({ virtuals: true, autopopulate: true });
     }
 
     async findOne(filter: any): Promise<M> {
         filter = filter || {};
-        return this.mongoModel.findOne(filter).lean({ autopopulate: true });
+        return this.mongoModel.findOne(filter).lean({ virtuals: true, autopopulate: true });
     }
 
     async findById(_id: BaseModel["_id"]): Promise<M> {
-        return this.mongoModel.findById(_id).lean({ autopopulate: true });
+        return this.mongoModel.findById(_id).lean({ virtuals: true, autopopulate: true });
     }
 
     async deleteById(_id: BaseModel["_id"]): Promise<void> {

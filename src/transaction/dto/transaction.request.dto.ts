@@ -6,20 +6,22 @@ import { Transaction } from '../transaction.model';
 
 
 export class CreateWithdrawTransactionRequest {
+
     @IsString()    
     requestId : string;
 
     @IsEnum(BlockchainName)
     blockchainName : BlockchainName;
 
-    @IsString()    
+    @IsString()
+    @IsOptional()    
     tokenName? : string;
 
     @IsString()    
     to : string;
 
     @IsString()    
-    amounth : string;
+    amount : string;
 }
 
 export class GetNotReadTransactionsRequest {

@@ -58,13 +58,13 @@ export class NetworkService implements OnModuleInit {
 	}
 
 
-	async createTransaction(blockchainName: BlockchainName, to: string, amounth: string) : Promise<Transaction> {
+	async createTransaction(blockchainName: BlockchainName, to: string, amount: string) : Promise<Transaction> {
 		switch(blockchainName) {
 
 			case BlockchainName.BITCOIN : {
 				return await this.bitcoinService.createTransaction(
 					to,
-					amounth,
+					amount,
 					this.withdrawWallets[blockchainName]
 				)
 			}
@@ -72,7 +72,7 @@ export class NetworkService implements OnModuleInit {
 			case BlockchainName.ETHEREUM : {
 				return await this.ethereumContractService.createTransaction(
 					to,
-					amounth,
+					amount,
 					this.withdrawWallets[blockchainName]
 				)
 			}
@@ -80,7 +80,7 @@ export class NetworkService implements OnModuleInit {
 			case BlockchainName.TRON : {
 				return await this.tronContractService.createTransaction(
 					to,
-					amounth,
+					amount,
 					this.withdrawWallets[blockchainName]
 				)
 
@@ -89,7 +89,7 @@ export class NetworkService implements OnModuleInit {
 		}
 	}
 
-	async createTokenTransaction(blockchainName: BlockchainName, tokenName : string, to: string, amounth: string) : Promise<Transaction> {
+	async createTokenTransaction(blockchainName: BlockchainName, tokenName : string, to: string, amount: string) : Promise<Transaction> {
 
 		switch(blockchainName) {
 
@@ -101,7 +101,7 @@ export class NetworkService implements OnModuleInit {
 				return await this.ethereumContractService.createTokenTransaction(
 					tokenName as EthereumTokenName,
 					to,
-					amounth,
+					amount,
 					this.withdrawWallets[blockchainName]
 				)
 			}
@@ -110,7 +110,7 @@ export class NetworkService implements OnModuleInit {
 				return await this.tronContractService.createTokenTransaction(
 					tokenName as TronTokenName,
 					to,
-					amounth,
+					amount,
 					this.withdrawWallets[blockchainName]
 				)
 
