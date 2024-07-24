@@ -182,7 +182,7 @@ export class TronService implements OnModuleInit {
             transaction.estimatedFee = tradeObj.fee_limit;
             transaction.requestedBlockNumber = (await this.getBlockNumber()).toString();
             
-            return receipt;
+            return transaction;
         } catch(error) {
 			this.logger.error('Hata:', error);
             transaction.hasError = true;

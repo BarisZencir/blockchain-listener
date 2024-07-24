@@ -272,7 +272,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
                     transaction.state = TransactionState.COMPLATED;
                     transaction.hash = txid;
                     transaction.hasError = true;
-                    transaction.error = error?.message;
+                    transaction.error = error?.message || error?.toString();
                     transactions[batchIndex].push(transaction); 
                 }
             }
@@ -282,8 +282,9 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
             transaction.blockchainName = BlockchainName.BITCOIN;
             transaction.state = TransactionState.COMPLATED;
             transaction.hasError = true;
-            transaction.error = error?.message;
-            transactions[batchIndex].push(transaction);         }
+            transaction.error = error?.message || error?.toString();
+            transactions[batchIndex].push(transaction);
+        }
     }
 
 }

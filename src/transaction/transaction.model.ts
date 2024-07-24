@@ -17,6 +17,7 @@ export class Transaction extends BaseModel {
 	
 	@Prop({
 		enum: TransactionType,
+		default : TransactionType.NOT_KNOWN,
 		required : true
 	})
 	type: TransactionType;

@@ -124,7 +124,7 @@ export class BlockListenerService extends EthereumService implements OnModuleIni
                     transaction.state = TransactionState.COMPLATED;
                     transaction.hash = txHash;
                     transaction.hasError = true;
-                    transaction.error = error?.message;
+                    transaction.error = error?.message || error?.toString();
                     transactions[batchIndex].push(transaction);  
                 }
             }
@@ -134,7 +134,7 @@ export class BlockListenerService extends EthereumService implements OnModuleIni
             transaction.blockchainName = BlockchainName.ETHEREUM;
             transaction.state = TransactionState.COMPLATED;
             transaction.hasError = true;
-            transaction.error = error?.message;
+            transaction.error = error?.message || error?.toString();
             transactions[batchIndex].push(transaction);  
         }
     }

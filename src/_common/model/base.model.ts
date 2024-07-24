@@ -9,7 +9,7 @@ export class HasId {
     _id: MongooseTypes.ObjectId;
 
     get id(): string {
-        return this._id.toString();
+        return this._id?.toString();
     }
 
     set id(value: string) {

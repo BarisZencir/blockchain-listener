@@ -5,6 +5,7 @@ export enum TransactionState {
 }
 
 export enum TransactionType {
+    NOT_KNOWN = "NOT_KNOWN",
     WITHDRAW = "WITHDRAW",
     VIRMAN = "VIRMAN",
     DEPOSIT = "DEPOSIT"

@@ -16,6 +16,7 @@ import { EthereumModule } from './networks/ethereum/ethereum.module';
 import { TronModule } from './networks/tron/tron.module';
 import { BitcoinModule } from './networks/bitcoin/bitcoin.module';
 import { CoreModule } from './_core/core.module';
+import { AppTestController } from './app.test.controller';
 @Module({
     imports: [
         ConfigModule.forRoot({
@@ -41,7 +42,7 @@ import { CoreModule } from './_core/core.module';
         EthereumModule,
         TronModule
     ],
-    controllers: [],
-    providers: [AppService, AppTasksService],
+    controllers: [AppTestController],
+    providers: [AppService, AppTasksService, AppTestController],
 })
 export class AppModule { }

@@ -37,7 +37,7 @@ export class TronContractService extends TronService implements OnModuleInit {
     }
 
     async onModuleInit(): Promise<void> {
-		await super.initService();
+		await this.initService();
         // console.log(erc20Abi)
 
         // let blockNumber = await this.getBlockNumber();
@@ -189,7 +189,7 @@ export class TronContractService extends TronService implements OnModuleInit {
         }
     }
 
-    async createTokenTransaction(tokenName: TronTokenName, to: string, amount: string, _signer: Pick<Wallet, 'address' | 'privateKey'>): Promise<any> {
+    async createTokenTransaction(tokenName: TronTokenName, to: string, amount: string, _signer: Pick<Wallet, 'address' | 'privateKey'>): Promise<Transaction> {
         await this.checkAndTryConnection();
         let contract = this.tokenContracts.get(tokenName);
 
@@ -214,7 +214,7 @@ export class TronContractService extends TronService implements OnModuleInit {
         transaction.to = to;
         transaction.requestedBlockNumber = (await this.getBlockNumber()).toString();
 
-        return receipt.txID ? receipt : {txID : tx};
+        return transaction;
     }
 
     async convertHexToTronAddress(hexAddress: string): Promise<string> {
@@ -235,10 +235,7 @@ export class TronContractService extends TronService implements OnModuleInit {
             // Kontrattan etkinlikleri almak için getEventResult yerine uygun fonksiyonu kullanın
             const events = await this.tronWeb.getEventResult(contract.address, {
                 eventName: 'Transfer',
-                block_number: {
-                    $gte: blockNumber,
-                    $lte: blockNumber
-                }
+                blockNumber: blockNumber
             });
     
             return Promise.all(events.map(async event => ({

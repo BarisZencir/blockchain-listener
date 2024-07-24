@@ -219,7 +219,7 @@ export class EthereumContractService extends EthereumService implements OnModule
     //     }
     // }
 
-    async createTokenTransaction(tokenName: EthereumTokenName, to: string, amount: string, _signer : Pick<Wallet, 'address' | 'privateKey' | 'nonce'>): Promise<any> {
+    async createTokenTransaction(tokenName: EthereumTokenName, to: string, amount: string, _signer : Pick<Wallet, 'address' | 'privateKey' | 'nonce'>): Promise<Transaction> {
         await this.checkAndTryConnection();
         let contract = this.tokenContracts.get(tokenName);
         const txCount = await this.web3!.eth.getTransactionCount(_signer.address); //note: simdilik boyle de bunu wallettan yonetecez.
@@ -259,7 +259,7 @@ export class EthereumContractService extends EthereumService implements OnModule
         transaction.estimatedFee = (new BigNumber(tx.gasPrice)).times(tx.gasLimit).toString();
         transaction.requestedBlockNumber = (await this.getBlockNumber())?.toString();
 
-        return receipt;
+        return transaction;
     }
 
     async getContractTransferEvents(tokenName: EthereumTokenName, blockNumber: number): Promise<ITransferEvent[]> {

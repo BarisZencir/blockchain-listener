@@ -138,7 +138,7 @@ export class BlockListenerService extends TronService implements OnModuleInit {
                         transaction.state = TransactionState.COMPLATED;
                         transaction.hash = txId;
                         transaction.hasError = true;
-                        transaction.error = error?.message;
+                        transaction.error = error?.message || error?.toString();
                         transactions[batchIndex].push(transaction);  
                     }
                 }
@@ -150,7 +150,7 @@ export class BlockListenerService extends TronService implements OnModuleInit {
             transaction.blockchainName = BlockchainName.TRON;
             transaction.state = TransactionState.COMPLATED;
             transaction.hasError = true;
-            transaction.error = error?.message;
+            transaction.error = error?.message || error?.toString();
             transactions[batchIndex].push(transaction);  
         }
     }
