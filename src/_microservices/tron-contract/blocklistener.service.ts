@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import BigNumber from 'bignumber.js';
 import { Wallet } from 'ethers';
 import { BlockchainName } from 'src/_common/enums/blockchain.name.enums';
+import { sleep } from 'src/_common/utils/sandbox.utils';
 import { Block } from 'src/block/block.model';
 import { BlockService } from 'src/block/block.service';
 import { ITransferEvent } from 'src/networks/ethereum/ethereum.contract.service';
@@ -69,7 +70,7 @@ export class BlockListenerService extends TronContractService implements OnModul
         await this.blockService.update(block);
     }
 
-    async proccessBlock(transactions : Transaction[][], batchIndex : number, blockNumber: BigNumber, latestBlockNumber : BigNumber): Promise<void> {
+    async proccessBlock(transactions : Transaction[][], batchIndex : number, blockNumber: BigNumber, latestBlockNumber : BigNumber, retryBlock : BigNumber[], reTryCount = 0): Promise<void> {
 
         this.logger.debug('Tron( token group index: '+ this.tokenGroupIndex +') block processed. blockNumber: ' + blockNumber);
         
@@ -144,13 +145,12 @@ export class BlockListenerService extends TronContractService implements OnModul
                 }
             }
         } catch (error) {
-            let transaction = new Transaction();
-            transaction.processedBlockNumber = blockNumber.toString();
-            transaction.blockchainName = BlockchainName.TRON;
-            transaction.state = TransactionState.COMPLATED;
-            transaction.hasError = true;
-            transaction.error = error?.message || error?.toString();
-            transactions[batchIndex].push(transaction);
+            if(reTryCount < 4) {
+                await sleep(2000);
+                await this.proccessBlock(transactions, batchIndex, blockNumber, latestBlockNumber, retryBlock, reTryCount + 1);
+            } else {
+                retryBlock.push(blockNumber);
+            }
         }
     }
 }

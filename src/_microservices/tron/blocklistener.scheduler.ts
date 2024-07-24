@@ -16,6 +16,8 @@ export class BlockListenerScheduler implements OnModuleInit {
     private blockGap : BigNumber;
     private batchLimit : number;
     private lock : boolean;
+    private retryBlock : BigNumber[];
+
     constructor(
         private configService: ConfigService,
         private readonly blockListenerService: BlockListenerService,
@@ -24,6 +26,7 @@ export class BlockListenerScheduler implements OnModuleInit {
     ) { 
         this.currentBlockNumber = null;
         this.lock = true;
+        this.retryBlock = new Array<BigNumber>();
     }
 
     async onModuleInit(): Promise<void> {
@@ -76,8 +79,13 @@ export class BlockListenerScheduler implements OnModuleInit {
             let transactionArray2D: Transaction[][] = Array.from({ length: batchSize }, () => []);
 
             for (let i = 0; i < batchSize; i++) {
-                nextBlockNumber = nextBlockNumber.plus(1);
-                promises.push(this.blockListenerService.proccessBlock(transactionArray2D, i, nextBlockNumber, liveBlockNumber));
+                if(this.retryBlock.length) {
+                    let blockNumber = this.retryBlock.shift();
+                    promises.push(this.blockListenerService.proccessBlock(transactionArray2D, i, blockNumber, liveBlockNumber, this.retryBlock));
+                } else {
+                    nextBlockNumber = nextBlockNumber.plus(1);
+                    promises.push(this.blockListenerService.proccessBlock(transactionArray2D, i, nextBlockNumber, liveBlockNumber, this.retryBlock));
+                }
             }
             await Promise.all(promises); // 20 bloğu toplu olarak işle
             this.currentBlockNumber = nextBlockNumber; 
