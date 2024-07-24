@@ -39,7 +39,7 @@ export class WalletController {
             response.blockchainName = nextWallet.blockchainName;
             response.address = nextWallet.address;
 
-        }        
+        }
     
         this.logger.debug("getFreeAddress done.");
         return response;
