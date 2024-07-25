@@ -12,6 +12,8 @@ import { EthereumContractService } from "./ethereum/ethereum.contract.service";
 import { TronContractService } from "./tron/tron.contract.service";
 import { EthereumTokenName } from "./ethereum/enum/token.name";
 import { TronTokenName } from "./tron/enum/token.name";
+import { AvalancheContractService } from "./avalanche/avalanche.contract.service";
+import { AvalancheTokenName } from "./avalanche/enum/token.name";
 
 @Injectable()
 export class NetworkService implements OnModuleInit {
@@ -21,6 +23,7 @@ export class NetworkService implements OnModuleInit {
 		[BlockchainName.BITCOIN] : Wallet,
 		[BlockchainName.ETHEREUM] : Wallet,
 		[BlockchainName.TRON] : Wallet,
+		[BlockchainName.AVALANCHE] : Wallet,
 
 	}
 
@@ -30,6 +33,7 @@ export class NetworkService implements OnModuleInit {
 		protected bitcoinService : BitcoinService,
 		protected ethereumContractService : EthereumContractService,
 		protected tronContractService: TronContractService,
+		protected avalancheContractService : AvalancheContractService
 	) {
 
 	}
@@ -46,7 +50,9 @@ export class NetworkService implements OnModuleInit {
 			[BlockchainName.ETHEREUM] : await this.walletService.getWalletAsSigner(
 				BlockchainName.ETHEREUM, 0),
 			[BlockchainName.TRON] : await this.walletService.getWalletAsSigner(
-				BlockchainName.TRON, 0)			
+				BlockchainName.TRON, 0),
+			[BlockchainName.AVALANCHE] : await this.walletService.getWalletAsSigner(
+				BlockchainName.AVALANCHE, 0)			
 		}
 	}
 
@@ -75,7 +81,14 @@ export class NetworkService implements OnModuleInit {
 					amount,
 					this.withdrawWallets[blockchainName]
 				)
+			}
 
+			case BlockchainName.AVALANCHE : {
+				return await this.avalancheContractService.createTransaction(
+					to,
+					amount,
+					this.withdrawWallets[blockchainName]
+				)
 			}
 
 		}
@@ -105,12 +118,20 @@ export class NetworkService implements OnModuleInit {
 					amount,
 					this.withdrawWallets[blockchainName]
 				)
+			}
 
+			case BlockchainName.AVALANCHE : {
+				return null;// simdilik token dinlemiyoruz.
+				// return await this.avalancheContractService.createTokenTransaction(
+				// 	tokenName as AvalancheTokenName,
+				// 	to,
+				// 	amount,
+				// 	this.withdrawWallets[blockchainName]
+				// )
 			}
 
 		}
 
 	}
-
 
 }

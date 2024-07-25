@@ -23,6 +23,8 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletReposit
         [BlockchainName.BITCOIN] : Wallet["address"][],
         [BlockchainName.ETHEREUM] : Wallet["address"][],
         [BlockchainName.TRON] : Wallet["address"][],
+        [BlockchainName.AVALANCHE] : Wallet["address"][],
+
     }
 
     constructor(
@@ -178,6 +180,36 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletReposit
                 this.logger.warn("trx mnemonic can not found. Pls enter HOT_WALLET_TRX_MNEMONIC to .env file.")
             }
         }
+
+        let isExistsAVAXAddresses = await this.repository.exists({blockchainName : BlockchainName.AVALANCHE});
+        if(!isExistsAVAXAddresses) {
+
+            if(numberOfAddresses <= 0) {
+                this.logger.warn("Pls enter HOT_WALLET_NUMBER_OF_ADDRESSES to .env file.")
+            }
+            
+            //burada default init.
+            mnemonic = this.configService.get<string>("HOT_WALLET_AVAX_MNEMONIC");
+            if('undefined' != typeof mnemonic) {
+                let addresses = this.hdWalletService.generateAddresses(BlockchainName.AVALANCHE, mnemonic, numberOfAddresses);
+                addresses.forEach(address => {
+                    let wallet = new Wallet();
+                    wallet.blockchainName = BlockchainName.AVALANCHE;
+                    wallet.index = address.index;
+                    wallet.nonce = 0;
+                    wallet.privateKey = this.encrypt(address.privateKey);
+                    wallet.publicKey = address.publicKey;
+                    wallet.address = address.address.toLowerCase();
+                    wallet.available = wallet.index == 0 ? false : true;
+                    // wallet.estimatedBalance = "0";
+                    // wallet.tokenBalance = new Array<TokenBalance>();
+                    walletList.push(wallet);
+                });
+
+            } else {
+                this.logger.warn("eth mnemonic can not found. Pls enter HOT_WALLET_ETH_MNEMONIC to .env file.")
+            }
+        }
         
         //TODO: bunu bulk ile yapalim.
         //base repoya o metod eklenecek.
@@ -201,6 +233,10 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletReposit
             available : true
         });
 
+        let availableAVAXWallets = await this.repository.find({
+            blockchainName : BlockchainName.AVALANCHE,
+            available : true
+        });
         // this.availableWalletAddresses = {
         //     BITCOIN  : new Array<Wallet["address"]>(),
         //     ETHEREUM : new Array<Wallet["address"]>()
@@ -210,6 +246,8 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletReposit
             BITCOIN  : availableBTCWallets.map(wallet => wallet.address),
             ETHEREUM : availableETHWallets.map(wallet => wallet.address),
             TRON : availableTRXWallets.map(wallet => wallet.address),
+            AVALANCHE : availableAVAXWallets.map(wallet => wallet.address),
+
         }
 
     }

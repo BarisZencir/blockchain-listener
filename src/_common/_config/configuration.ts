@@ -85,7 +85,17 @@ export default () => ({
             blockGap : new BigNumber(process.env.NETWORK_ETHEREUM_TOKEN_GROUP_INDEX || 0),
             tokenGroups : generateTokenGroups(BlockchainName.TRON),
             batchLimit : parseInt(process.env.NETWORK_TRON_LISTENER_BATCH_LIMIT || "10"),
-        }
+        },
+        avalanche : {
+            ws: process.env.NETWORK_AVALANCHE_WS,
+            chainId: parseInt(process.env.NETWORK_AVALANCHE_CHAIN_ID),
+            networkId: parseInt(process.env.NETWORK_AVALANCHE_NETWORK_ID),
+            starterBlockNumber : new BigNumber(process.env.NETWORK_AVALANCHE_STARTER_BLOCK_NUMBER || 0),
+            blockGap : new BigNumber(process.env.NETWORK_AVALANCHE_LISTENER_BLOCK_GAP || 0),
+            tokenGroups : generateTokenGroups(BlockchainName.AVALANCHE),
+            batchLimit : parseInt(process.env.NETWORK_AVALANCHE_LISTENER_BATCH_LIMIT || "10"),
+        },
+
 
     }
 });

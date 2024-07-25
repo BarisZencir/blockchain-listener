@@ -43,6 +43,12 @@ export class HDWalletService implements OnModuleInit {
 			})).generateAddresses(numberOfAddresses);
 		}
 
+		if(blockchainName == BlockchainName.AVALANCHE) {
+			return (new EthereumHDWallet(mnemonic, {
+				derivePath: "44'/60'/0'/0"
+			})).generateAddresses(numberOfAddresses);
+		}
+
 	}
 
 	async onModuleInit(): Promise<void> {
