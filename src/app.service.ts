@@ -8,6 +8,7 @@ import { TokenBalance, Wallet } from './wallet/wallet.model';
 import { Transaction } from './transaction/transaction.model';
 import { TransactionType } from './transaction/enum/transaction.state';
 import { BlockchainName } from './_common/enums/blockchain.name.enums';
+import { startMicroservices } from './_microservices/microservice.manager';
 @Injectable()
 export class AppService implements OnModuleInit {
     private readonly logger = new Logger(AppService.name);
@@ -21,12 +22,15 @@ export class AppService implements OnModuleInit {
 
     async onModuleInit(): Promise<void> {
         this.logger.log("App service on module init started.");
-        let configTest = this.configService.get<string>("config.test");
-        let configTest2 = this.configService.get<string>("CONFIG_TEST");
+        startMicroservices(3301);
 
-        this.logger.log("configTest: " + configTest);
 
-        this.logger.log("configTest: " + configTest2);
+        // let configTest = this.configService.get<string>("config.test");
+        // let configTest2 = this.configService.get<string>("CONFIG_TEST");
+
+        // this.logger.log("configTest: " + configTest);
+
+        // this.logger.log("configTest: " + configTest2);
 
         // let currentBlock = await this.blockService.findOne({blockchainName : "Bitcoin", groupIndex : -1});
         // if(!currentBlock) {
