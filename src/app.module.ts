@@ -19,6 +19,7 @@ import { CoreModule } from './_core/core.module';
 import { AppTestController } from './app.test.controller';
 import { APP_GUARD } from '@nestjs/core';
 import { ApiKeyGuard } from './_core/guards/api-key.guard';
+import { TransactionControllerModule } from './transaction/transaction.controller.module';
 @Module({
     imports: [
         ConfigModule.forRoot({
@@ -39,6 +40,7 @@ import { ApiKeyGuard } from './_core/guards/api-key.guard';
         WalletModule,
         UtxoModule,
         TransactionModule,
+        TransactionControllerModule,
         HDWalletModule,
         BitcoinModule,
         EthereumModule,

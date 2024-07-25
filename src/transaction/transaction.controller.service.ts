@@ -2,12 +2,13 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Service } from '../_common/service';
 import { Transaction, TransactionDocument } from './transaction.model';
 import { TransactionsRepository } from './transaction.repository';
+import { TransactionService } from './transaction.service';
 
 
 @Injectable()
-export class TransactionService extends Service<Transaction, TransactionDocument, TransactionsRepository> implements OnModuleInit {
+export class TransactionsControllerService extends TransactionService {
 
-    protected readonly logger = new Logger(TransactionService.name);
+    protected readonly logger = new Logger(TransactionsControllerService.name);
 
     constructor(
         protected repository: TransactionsRepository,
@@ -16,9 +17,6 @@ export class TransactionService extends Service<Transaction, TransactionDocument
     }
 
     async onModuleInit() : Promise<void> {
-    }
-
-    async findByTxHash(blockchainName : Transaction["blockchainName"], hash: Transaction["hash"]) : Promise<Transaction> {
-        return this.repository.findByTxHash(blockchainName, hash);
+        await super.onModuleInit();
     }
 }

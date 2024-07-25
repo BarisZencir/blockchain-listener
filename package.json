@@ -37,6 +37,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "crypto": "^1.0.1",
+    "dotenv": "^16.4.5",
     "ethereumjs-common": "^1.5.2",
     "ethereumjs-tx": "^2.1.2",
     "ethereumjs-util": "^7.1.5",
@@ -47,11 +48,14 @@
     "mongoose": "^8.5.0",
     "mongoose-autopopulate": "^1.1.0",
     "mongoose-lean-virtuals": "^0.9.1",
+    "nest-winston": "^1.9.7",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "tiny-secp256k1": "^2.2.3",
     "tronweb": "^5.3.2",
-    "web3": "^4.11.0"
+    "web3": "^4.11.0",
+    "winston": "^3.13.1",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

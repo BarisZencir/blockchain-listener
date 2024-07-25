@@ -9,7 +9,7 @@ function startMicroservice(path: string, port: number, envSettings? : any) {
     });
   
     childProcess.stdout.on('data', (data) => {
-      console.log(`stdout: ${data}`);
+      // console.log(`stdout: ${data}`);
     });
   
     childProcess.stderr.on('data', (data) => {
@@ -29,22 +29,36 @@ export function startMicroservices(starterPort : number) {
     const services = [
     ];
 
-    services.push({ path: 'dist/_microservices/bitcoin/main.js', port: starterPort++ })
-    services.push({ path: 'dist/_microservices/ethereum/main.js', port: starterPort++ })
-    services.push({ path: 'dist/_microservices/tron/main.js', port: starterPort++ })
+    services.push({ path: 'dist/_microservices/bitcoin/main.js', port: starterPort++, envSettings : {
+      LOGGER_FILE_PREFIX : "bitcoin_"
+
+    }})
+    services.push({ path: 'dist/_microservices/ethereum/main.js', port: starterPort++ , envSettings : {
+      LOGGER_FILE_PREFIX : "ethereum_"
+
+    }})
+    services.push({ path: 'dist/_microservices/tron/main.js', port: starterPort++ , envSettings : {
+      LOGGER_FILE_PREFIX : "tron_"
+
+    }})
 
     services.push({ path: 'dist/_microservices/ethereum-contract/main.js', port: starterPort++, envSettings : {
-      NETWORK_ETHEREUM_TOKEN_GROUP_INDEX : 0
+      NETWORK_ETHEREUM_TOKEN_GROUP_INDEX : 0,
+      LOGGER_FILE_PREFIX : "ethereum_contract_g0"
+
     }})
     services.push({ path: 'dist/_microservices/ethereum-contract/main.js', port: starterPort++, envSettings : {
-      NETWORK_ETHEREUM_TOKEN_GROUP_INDEX : 1
+      NETWORK_ETHEREUM_TOKEN_GROUP_INDEX : 1,
+      LOGGER_FILE_PREFIX : "ethereum_contract_g1"
     }})
     services.push({ path: 'dist/_microservices/ethereum-contract/main.js', port: starterPort++, envSettings : {
-      NETWORK_ETHEREUM_TOKEN_GROUP_INDEX : 2
+      NETWORK_ETHEREUM_TOKEN_GROUP_INDEX : 2,
+      LOGGER_FILE_PREFIX : "ethereum_contract_g2"
     }})
 
     services.push({ path: 'dist/_microservices/tron-contract/main.js', port: starterPort++, envSettings : {
-      NETWORK_TRON_TOKEN_GROUP_INDEX : 0
+      NETWORK_TRON_TOKEN_GROUP_INDEX : 0,
+      LOGGER_FILE_PREFIX : "tron_contract_g0"
     }})
 
 

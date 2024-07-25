@@ -9,6 +9,7 @@ import { HttpExceptionFilter } from "src/_core/filters/http-exception.filter";
 import { ApiException } from "src/_common/api/api.exeptions";
 import { ApiError } from "src/_common/api/api.error";
 import { ApiKeyGuard } from "src/_core/guards/api-key.guard";
+import { TransactionsControllerService } from "./transaction.controller.service";
 
 @UseGuards(ApiKeyGuard)
 @Controller('transaction')
@@ -17,7 +18,7 @@ export class TransactionController {
 
     private readonly logger = new Logger(TransactionController.name);
     constructor(
-        private transactionService : TransactionService,
+        private transactionService : TransactionsControllerService,
         private networkService : NetworkService
         ) {
     }
