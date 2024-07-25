@@ -17,6 +17,8 @@ import { TronModule } from './networks/tron/tron.module';
 import { BitcoinModule } from './networks/bitcoin/bitcoin.module';
 import { CoreModule } from './_core/core.module';
 import { AppTestController } from './app.test.controller';
+import { APP_GUARD } from '@nestjs/core';
+import { ApiKeyGuard } from './_core/guards/api-key.guard';
 @Module({
     imports: [
         ConfigModule.forRoot({
@@ -43,6 +45,11 @@ import { AppTestController } from './app.test.controller';
         TronModule
     ],
     controllers: [AppTestController],
-    providers: [AppService, AppTasksService, AppTestController],
+    providers: [
+        {
+            provide: APP_GUARD,
+            useClass: ApiKeyGuard,
+        },
+        AppService, AppTasksService, AppTestController],
 })
 export class AppModule { }

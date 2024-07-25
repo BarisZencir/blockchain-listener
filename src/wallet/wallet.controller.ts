@@ -7,7 +7,9 @@ import { Wallet } from "./wallet.model";
 import { HttpExceptionFilter } from "src/_core/filters/http-exception.filter";
 import { ApiException } from "src/_common/api/api.exeptions";
 import { ApiError } from "src/_common/api/api.error";
+import { ApiKeyGuard } from "src/_core/guards/api-key.guard";
 
+@UseGuards(ApiKeyGuard)
 @Controller('wallet')
 @UseFilters(HttpExceptionFilter)
 export class WalletController {
