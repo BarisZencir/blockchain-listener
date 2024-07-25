@@ -41,22 +41,14 @@ export class NetworkService implements OnModuleInit {
 
 	async initService(): Promise<void> {
 		this.withdrawWallets = {
-			[BlockchainName.BITCOIN] : await this.walletService.findOne({
-				blockchainName : BlockchainName.BITCOIN,
-				index : 0
-			}),
-			[BlockchainName.ETHEREUM] : await this.walletService.findOne({
-				blockchainName : BlockchainName.ETHEREUM,
-				index : 0
-			}),
-			[BlockchainName.TRON] : await this.walletService.findOne({
-				blockchainName : BlockchainName.TRON,
-				index : 0
-			})
+			[BlockchainName.BITCOIN] : await this.walletService.getWalletAsSigner(
+				BlockchainName.BITCOIN, 0),
+			[BlockchainName.ETHEREUM] : await this.walletService.getWalletAsSigner(
+				BlockchainName.ETHEREUM, 0),
+			[BlockchainName.TRON] : await this.walletService.getWalletAsSigner(
+				BlockchainName.TRON, 0)			
 		}
-
 	}
-
 
 	async createTransaction(blockchainName: BlockchainName, to: string, amount: string) : Promise<Transaction> {
 		switch(blockchainName) {

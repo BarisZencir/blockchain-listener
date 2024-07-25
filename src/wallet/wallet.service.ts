@@ -5,12 +5,19 @@ import { WalletRepository } from './wallet.repository';
 import { HDWalletService } from 'src/_core/hdwallet/hdwallet.service';
 import { BlockchainName } from 'src/_common/enums/blockchain.name.enums';
 import { ConfigService } from '@nestjs/config';
-
+import * as crypto from 'crypto';
 
 @Injectable()
 export class WalletService extends Service<Wallet, WalletDocument, WalletRepository> implements OnModuleInit {
 
     private readonly logger = new Logger(WalletService.name);
+    private crypDx = {
+        secret : null,
+        algorithm : 'aes-256-cbc',
+        key : null,
+        iv : null
+
+    };
 
     private availableWalletAddresses : {
         [BlockchainName.BITCOIN] : Wallet["address"][],
@@ -26,7 +33,46 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletReposit
         super(repository);
     }
 
+    private encrypt(text : string) : string {
+        if(this.crypDx.iv) {
+            const cipher = crypto.createCipheriv(this.crypDx.algorithm, this.crypDx.key, this.crypDx.iv);
+            let encrypted = cipher.update(text, 'utf8', 'hex');
+            encrypted += cipher.final('hex');
+            return `${this.crypDx.iv.toString('hex')}:${encrypted}`;
+        }
+        return text;
+    }
+      
+    private  decrypt(encrypted: string) : string {
+        if(this.crypDx.iv) {
+            const [ivText, encryptedText] = encrypted.split(':');
+            const ivBuffer = Buffer.from(ivText, 'hex');
+            const decipher = crypto.createDecipheriv(this.crypDx.algorithm, this.crypDx.key, ivBuffer);
+            let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+            decrypted += decipher.final('utf8');
+            return decrypted;    
+        }
+        return encrypted;
+    }
+
     async onModuleInit() : Promise<void> {
+
+        // process.argv'dan parametreleri al
+        const args = process.argv.slice(2);        
+        args.forEach((arg) => {
+        const [key, value] = arg.split('=');
+            if (key === '--WLT_SCR') {
+                this.crypDx.secret = value;
+            }
+        });
+
+        console.log('secret :', this.crypDx.secret);
+
+        if(this.crypDx.secret) {
+            this.crypDx.key = crypto.scryptSync(this.crypDx.secret, 'salt', 32);
+            this.crypDx.iv = crypto.randomBytes(16);
+        }
+
         let mnemonic : string;
         let numberOfAddresses = this.configService.get<number>("wallet.numberOfAddresses");
 
@@ -59,7 +105,7 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletReposit
                     wallet.blockchainName = BlockchainName.BITCOIN;
                     wallet.index = address.index;
                     wallet.nonce = 0;
-                    wallet.privateKey = address.privateKey;
+                    wallet.privateKey = this.encrypt(address.privateKey);
                     wallet.publicKey = address.publicKey;
                     wallet.address = address.address.toLowerCase();
                     wallet.available = wallet.index == 0 ? false : true;
@@ -89,7 +135,7 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletReposit
                     wallet.blockchainName = BlockchainName.ETHEREUM;
                     wallet.index = address.index;
                     wallet.nonce = 0;
-                    wallet.privateKey = address.privateKey;
+                    wallet.privateKey = this.encrypt(address.privateKey);
                     wallet.publicKey = address.publicKey;
                     wallet.address = address.address.toLowerCase();
                     wallet.available = wallet.index == 0 ? false : true;
@@ -119,7 +165,7 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletReposit
                     wallet.blockchainName = BlockchainName.TRON;
                     wallet.index = address.index;
                     wallet.nonce = 0;
-                    wallet.privateKey = address.privateKey;
+                    wallet.privateKey = this.encrypt(address.privateKey);
                     wallet.publicKey = address.publicKey;
                     wallet.address = address.address;
                     wallet.available = wallet.index == 0 ? false : true;
@@ -196,5 +242,17 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletReposit
         return this.repository.findByAddress(blockchainName, address);
     }
 
+
+    async getWalletAsSigner(blockchainName : BlockchainName, index: number) : Promise<Wallet> {
+        let wallet = await this.repository.findOne({
+            blockchainName : blockchainName, 
+            index : index
+        });
+
+        if(wallet) {
+            wallet.privateKey = this.decrypt(wallet.privateKey);
+        }
+        return wallet;
+    }
 
 }
