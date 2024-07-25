@@ -3,6 +3,7 @@ import { Document } from 'mongoose';
 import { BaseModel, createSchema } from '../_common/model/base.model';
 import { TransactionState, TransactionType } from './enum/transaction.state';
 import { BlockchainName } from 'src/_common/enums/blockchain.name.enums';
+import { ITransferEvent } from 'src/networks/ethereum/ethereum.contract.service';
 
 export type TransactionDocument = Transaction & Document;
 
@@ -47,6 +48,9 @@ export class Transaction extends BaseModel {
 
 	@Prop()
 	error: string;
+
+	@Prop()
+	event: string;
 
 	@Prop()
 	from: string;

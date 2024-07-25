@@ -19,7 +19,7 @@ export class DefaultLoggerService implements LoggerService {
     }
 
     debug?(message: any, ...optionalParams: any[]) {
-        console.log(message);
+        // console.log(message);
     }
 
     verbose?(message: any, ...optionalParams: any[]) {

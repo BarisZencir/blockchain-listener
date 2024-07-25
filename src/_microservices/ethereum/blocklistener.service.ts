@@ -60,6 +60,51 @@ export class BlockListenerService extends EthereumService implements OnModuleIni
         await this.blockService.update(block);
     }
 
+    async processTransaction(txHash: string, transactions : Transaction[], blockNumber: BigNumber, latestBlockNumber : BigNumber) {
+        const txJSON = await this.getTransaction(txHash);
+
+        let fromWallet = await this.walletService.findByAddress(BlockchainName.ETHEREUM, txJSON.from);
+        let toWallet = await this.walletService.findByAddress(BlockchainName.ETHEREUM, txJSON.to);
+        txHash = txJSON.hash;
+        if (fromWallet) {
+            // WITHDRAW + VIRMAN
+            const transaction = await this.transactionService.findByTxHash(BlockchainName.ETHEREUM, txJSON.hash);
+            if (!transaction) {
+                // TODO: Handle case if txDoc is null
+            } else {
+
+                transaction.state = TransactionState.COMPLATED;
+                transaction.amount = txJSON.value;
+                transaction.type = (toWallet == null) ? TransactionType.WITHDRAW : TransactionType.VIRMAN;
+                transaction.fee = new BigNumber(txJSON.gasPrice).multipliedBy(new BigNumber(txJSON.gas)).toString();
+                transaction.processedBlockNumber = String(txJSON.blockNumber);
+                transaction.complatedBlockNumber = blockNumber.toString();
+                transactions.push(transaction);            
+
+            }
+        } else if (toWallet) {
+            // DEPOSIT
+            
+            // toWallet.estimatedBalance = (new BigNumber(toWallet.estimatedBalance))
+            //     .plus(txJSON.value).toString();
+
+            let transaction = new Transaction();
+
+            transaction.blockchainName = BlockchainName.ETHEREUM;
+            transaction.state = TransactionState.COMPLATED;
+            transaction.type = TransactionType.DEPOSIT;
+            transaction.hash = txJSON.hash;
+            transaction.from = txJSON.from;
+            transaction.to = txJSON.to;
+            transaction.amount = txJSON.value;
+            transaction.fee = new BigNumber(txJSON.gasPrice).multipliedBy(new BigNumber(txJSON.gas)).toString();
+            transaction.processedBlockNumber = blockNumber.toString();
+            transaction.complatedBlockNumber = latestBlockNumber.toString();
+            transactions.push(transaction);            
+
+        }
+    }
+    
     async proccessBlock(transactions : Transaction[][], batchIndex : number, blockNumber: BigNumber, latestBlockNumber : BigNumber, retryBlock : BigNumber[], reTryCount = 0): Promise<void> {
 
         this.logger.debug('Ethereum block processed. blockNumber: ' + blockNumber);
@@ -73,59 +118,32 @@ export class BlockListenerService extends EthereumService implements OnModuleIni
             }
 
             const transactionHashList = blockJSON.transactions || [];
-            let txHash : string;
             for (let i = 0; i < transactionHashList.length; i++) {
-                try {
-                    const txJSON = await this.getTransaction(transactionHashList[i]);
+                let txHash = transactionHashList[i];
 
-                    let fromWallet = await this.walletService.findByAddress(BlockchainName.ETHEREUM, txJSON.from);
-                    let toWallet = await this.walletService.findByAddress(BlockchainName.ETHEREUM, txJSON.to);
-                    txHash = txJSON.hash;
-                    if (fromWallet) {
-                        // WITHDRAW + VIRMAN
-                        const transaction = await this.transactionService.findByTxHash(BlockchainName.ETHEREUM, txJSON.hash);
-                        if (!transaction) {
-                            // TODO: Handle case if txDoc is null
-                        } else {
- 
-                            transaction.state = TransactionState.COMPLATED;
-                            transaction.amount = txJSON.value;
-                            transaction.type = (toWallet == null) ? TransactionType.WITHDRAW : TransactionType.VIRMAN;
-                            transaction.fee = new BigNumber(txJSON.gasPrice).multipliedBy(new BigNumber(txJSON.gas)).toString();
-                            transaction.processedBlockNumber = String(txJSON.blockNumber);
-                            transaction.complatedBlockNumber = blockNumber.toString();
-                            transactions[batchIndex].push(transaction);            
-
-                        }
-                    } else if (toWallet) {
-                        // DEPOSIT
-                        
-                        // toWallet.estimatedBalance = (new BigNumber(toWallet.estimatedBalance))
-                        //     .plus(txJSON.value).toString();
-
-                        let transaction = new Transaction();
- 
-                        transaction.blockchainName = BlockchainName.ETHEREUM;
-                        transaction.state = TransactionState.COMPLATED;
-                        transaction.type = TransactionType.DEPOSIT;
-                        transaction.hash = txJSON.hash;
-                        transaction.from = txJSON.from;
-                        transaction.to = txJSON.to;
-                        transaction.amount = txJSON.value;
-                        transaction.fee = new BigNumber(txJSON.gasPrice).multipliedBy(new BigNumber(txJSON.gas)).toString();
-                        transaction.processedBlockNumber = blockNumber.toString();
-                        transaction.complatedBlockNumber = latestBlockNumber.toString();
-                        transactions[batchIndex].push(transaction);            
-
+                let hasError = false;
+                let tryCount = 0;
+                let errorMessage : string;
+                do {
+                    try {
+                        hasError = false;
+                        await this.processTransaction(txHash, transactions[batchIndex], blockNumber, latestBlockNumber);
+                    } catch (error) {
+                        hasError = true;
+                        tryCount++;
+                        errorMessage = error?.message || error?.toString();
                     }
-                } catch (error) {
+    
+                } while(hasError && tryCount < 40);
+
+                if(hasError) {
                     let transaction = new Transaction();
                     transaction.processedBlockNumber = blockNumber.toString();
                     transaction.blockchainName = BlockchainName.ETHEREUM;
                     transaction.state = TransactionState.COMPLATED;
                     transaction.hash = txHash;
                     transaction.hasError = true;
-                    transaction.error = error?.message || error?.toString();
+                    transaction.error = errorMessage;
                     transactions[batchIndex].push(transaction);  
                 }
             }

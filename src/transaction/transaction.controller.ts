@@ -125,7 +125,7 @@ export class TransactionController {
 
         this.logger.debug("updateTransactionAsRead started. params: " + JSON.stringify(request));
         let transaction = await this.transactionService.findOne({
-            id : request.id
+            _id : request.id
         });
         
         if(!transaction) {

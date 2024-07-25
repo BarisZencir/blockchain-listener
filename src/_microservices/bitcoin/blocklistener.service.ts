@@ -72,6 +72,180 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
         await this.blockService.update(block);
     }
 
+    async processTransaction(txId: string, transactions : Transaction[], utxos : Utxo[], blockNumber: BigNumber, latestBlockNumber : BigNumber) {
+
+        const txJSON = await this.getRawTransaction(txId);
+        let minerTransaction = txJSON.vin.some(vin => vin.coinbase);
+        if(minerTransaction) {
+            return;
+        }
+
+        let vinTxIds = [];
+        let vinAddresses = [];
+        let vinValues = [];
+        let vinTotalValue = new BigNumber(0);
+
+        let voutAddresses = [];
+        let voutValues = [];
+        let voutScriptPubKeys = [];
+        let voutTotalValue = new BigNumber(0);
+
+        let fee : BigNumber;
+
+        for (let n = 0; n < txJSON.vin.length; n++) {
+            let vin = txJSON.vin[n];
+            let vinTxRaw = await this.getRawTransaction(vin.txid);
+            let vinAddress = vinTxRaw.vout[vin.vout].scriptPubKey.addresses[0].toLowerCase();
+            let vinValue = this.convertBitcoinToSatoshi(vinTxRaw.vout[vin.vout].value);
+            
+            vinTxIds.push(vin.txid);
+            vinAddresses.push(vinAddress);
+            vinValues.push(vinValue);
+            vinTotalValue = vinTotalValue.plus(vinValue);
+        }
+
+        for (let n = 0; n < txJSON.vout.length; n++) {
+            let vout = txJSON.vout[n];
+            let voutAddress = vout.scriptPubKey.addresses[0].toLowerCase();
+            let voutValue = this.convertBitcoinToSatoshi(vout.value);
+
+            voutAddresses.push(voutAddress);
+            voutValues.push(voutValue);
+            voutTotalValue = voutTotalValue.plus(voutValue);
+            voutScriptPubKeys.push(vout.scriptPubKey.hex)
+        }
+
+        //calculate fee
+        fee = vinTotalValue.minus(voutTotalValue);
+
+        let isExistsVinWallet = await this.walletService.exists({
+            blockchainName : BlockchainName.BITCOIN,
+            address : {$in : vinAddresses}
+        });
+
+        let isExistsVoutWallet = await this.walletService.exists({
+            blockchainName : BlockchainName.BITCOIN,
+            address : {$in : voutAddresses}
+        });
+
+        if(!isExistsVinWallet && !isExistsVoutWallet) {
+            //bizle alakasi yok
+            return;
+        }
+
+        if(!isExistsVinWallet && isExistsVoutWallet) {
+            //deposit
+            //to wallet bul. not: birden fazla adresimize gonderilmesi ihmal edildi.
+            //ilk tespit edilin bizim adresimize gore islem yapilir.
+            let toWallet = await this.walletService.findOne({
+                blockchainName : BlockchainName.BITCOIN,
+                address : {$in : voutAddresses}   
+            });
+
+            let utxo = new Utxo();
+            utxo.txid = txId;
+            utxo.vout = voutAddresses.indexOf(toWallet.address);
+            utxo.scriptPubKey = voutScriptPubKeys[utxo.vout];
+            utxo.address = toWallet.address;
+            utxo.blockchainName = toWallet.blockchainName;
+            utxo.amount = (new BigNumber(voutValues[utxo.vout])).toString();
+            utxo.state = UtxoState.UN_SPENT;
+            utxos.push(utxo);                        
+        
+            let transaction = new Transaction();
+            transaction.blockchainName = utxo.blockchainName;
+            transaction.state = TransactionState.COMPLATED;
+            transaction.type = TransactionType.DEPOSIT;
+            transaction.hash = txId;
+
+            //simdilik kalsin. deposit'de from bizim icin onemli mi?
+            //transaction.from = ?;
+
+            transaction.to = toWallet.address;
+            transaction.amount = utxo.amount;
+            transaction.fee = fee.toString();
+            transaction.processedBlockNumber = blockNumber.toString();
+            transaction.complatedBlockNumber = latestBlockNumber.toString();
+            transactions.push(transaction);
+        }
+
+        if(isExistsVinWallet) {
+
+            //todo: vin'deki utxo'lari vinTxIds'e gore spent'e cek.
+            for(let j = 0; j < vinAddresses.length; j++ ) {
+                //not: mantiken bir transactionun vout'unda aynı adresten iki cikti olmamasi lazim.
+                //bende utxo'lari ona gore olusturduguma gore asagidaki sorgu dogru olmali.
+                let utxo = await this.utxoService.findOne({
+                    blockchainName : BlockchainName.BITCOIN,
+                    txid : vinTxIds[j],
+                    address : vinAddresses[j],
+                });
+
+                if(utxo) {
+                    utxo.state = UtxoState.SPENT;
+                    utxo.usedTxid = txId;
+                    utxos.push(utxo);
+                }
+                
+            }
+
+            for(let j = 0; j < voutAddresses.length; j++) {
+                let toWallet = await this.walletService.findOne({
+                    blockchainName : BlockchainName.BITCOIN,
+                    address : voutAddresses[j]   
+                });
+
+                if(toWallet) {
+                    let utxo = new Utxo();
+                    utxo.txid = txId;
+                    utxo.vout = voutAddresses.indexOf(toWallet.address);
+                    utxo.address = toWallet.address;
+                    utxo.scriptPubKey = voutScriptPubKeys[utxo.vout];
+                    utxo.blockchainName = toWallet.blockchainName;
+                    utxo.amount = (new BigNumber(voutValues[utxo.vout])).toString();
+                    utxo.state = UtxoState.UN_SPENT;
+                    utxos.push(utxo);
+
+                }
+            }
+
+            //withdraw veya virman
+            //islemleri biz yaptik. her zaman tek bir addrese para gonderiyoz.
+            //ve bu gonderilen address vin'de hic bir zaman olmayacak. (ya 0 address'e 1..n'den yada 0'dan cold wallet'a gonderecez.)
+            const toAddress = voutAddresses.filter(address => !vinAddresses.includes(address))[0];
+            if(toAddress) {
+                let toWallet = await this.walletService.findOne({
+                    blockchainName : BlockchainName.BITCOIN,
+                    address : toAddress   
+                });
+
+                let voutIndex = voutAddresses.indexOf(toAddress);
+
+
+                // WITHDRAW + VIRMAN
+                const transaction = await this.transactionService.findByTxHash(BlockchainName.BITCOIN, txId);
+                if (!transaction) {
+                    // TODO: Handle case if txDoc is null
+                } else {
+
+                    transaction.state = TransactionState.COMPLATED;
+                    transaction.amount = voutValues[voutIndex].toString();
+                    transaction.type = (toWallet == null) ? TransactionType.WITHDRAW : TransactionType.VIRMAN;
+                    transaction.fee = fee.toString();
+                    transaction.processedBlockNumber = blockNumber.toString();
+                    transaction.complatedBlockNumber = latestBlockNumber.toString();        
+                    transactions.push(transaction);
+                }
+
+            } else {
+                //nsa'da buraya girmez.
+
+            }
+
+        }
+    }
+
+
     async proccessBlock(transactions : Transaction[][], utxos : Utxo[][], batchIndex : number, blockNumber: BigNumber, latestBlockNumber : BigNumber, retryBlock : BigNumber[], reTryCount = 0): Promise<void> {
 
         this.logger.debug('Bitcoin block processed. blockNumber: ' + blockNumber);
@@ -92,189 +266,31 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
             }
 
             for (let i = 0; i < transactionHashList.length; i++) {
-                let txid: string;
-                try {
+                let txId = transactionHashList[i];
 
-                    const txJSON = await this.getRawTransaction(transactionHashList[i]);
-                    let minerTransaction = txJSON.vin.some(vin => vin.coinbase);
-                    if(minerTransaction) {
-                        continue;
+                let hasError = false;
+                let tryCount = 0;
+                let errorMessage : string;
+                do {
+                    try {
+                        hasError = false;
+                        await this.processTransaction(txId, transactions[batchIndex], utxos[batchIndex], blockNumber, latestBlockNumber);
+                    } catch (error) {
+                        hasError = true;
+                        tryCount++;
+                        errorMessage = error?.message || error?.toString();
                     }
-
-                    txid = txJSON.txid;
-
-                    let vinTxIds = [];
-                    let vinAddresses = [];
-                    let vinValues = [];
-                    let vinTotalValue = new BigNumber(0);
-
-                    let voutAddresses = [];
-                    let voutValues = [];
-                    let voutScriptPubKeys = [];
-                    let voutTotalValue = new BigNumber(0);
-
-                    let fee : BigNumber;
-
-                    for (let n = 0; n < txJSON.vin.length; n++) {
-                        let vin = txJSON.vin[n];
-                        let vinTxRaw = await this.getRawTransaction(vin.txid);
-                        let vinAddress = vinTxRaw.vout[vin.vout].scriptPubKey.addresses[0].toLowerCase();
-                        let vinValue = this.convertBitcoinToSatoshi(vinTxRaw.vout[vin.vout].value);
-                        
-                        vinTxIds.push(vin.txid);
-                        vinAddresses.push(vinAddress);
-                        vinValues.push(vinValue);
-                        vinTotalValue = vinTotalValue.plus(vinValue);
-                    }
-
-                    for (let n = 0; n < txJSON.vout.length; n++) {
-                        let vout = txJSON.vout[n];
-                        let voutAddress = vout.scriptPubKey.addresses[0].toLowerCase();
-                        let voutValue = this.convertBitcoinToSatoshi(vout.value);
-
-                        voutAddresses.push(voutAddress);
-                        voutValues.push(voutValue);
-                        voutTotalValue = voutTotalValue.plus(voutValue);
-                        voutScriptPubKeys.push(vout.scriptPubKey.hex)
-                    }
-
-                    //calculate fee
-                    fee = vinTotalValue.minus(voutTotalValue);
-
-                    let isExistsVinWallet = await this.walletService.exists({
-                        blockchainName : BlockchainName.BITCOIN,
-                        address : {$in : vinAddresses}
-                    });
-
-                    let isExistsVoutWallet = await this.walletService.exists({
-                        blockchainName : BlockchainName.BITCOIN,
-                        address : {$in : voutAddresses}
-                    });
-
-                    if(!isExistsVinWallet && !isExistsVoutWallet) {
-                        //bizle alakasi yok
-                        continue;
-                    }
-
-                    if(!isExistsVinWallet && isExistsVoutWallet) {
-                        //deposit
-                        //to wallet bul. not: birden fazla adresimize gonderilmesi ihmal edildi.
-                        //ilk tespit edilin bizim adresimize gore islem yapilir.
-                        let toWallet = await this.walletService.findOne({
-                            blockchainName : BlockchainName.BITCOIN,
-                            address : {$in : voutAddresses}   
-                        });
-
-                        let utxo = new Utxo();
-                        utxo.txid = txid;
-                        utxo.vout = voutAddresses.indexOf(toWallet.address);
-                        utxo.scriptPubKey = voutScriptPubKeys[utxo.vout];
-                        utxo.address = toWallet.address;
-                        utxo.blockchainName = toWallet.blockchainName;
-                        utxo.amount = (new BigNumber(voutValues[utxo.vout])).toString();
-                        utxo.state = UtxoState.UN_SPENT;
-                        utxos[batchIndex].push(utxo);                        
-                    
-                        let transaction = new Transaction();
-                        transaction.blockchainName = utxo.blockchainName;
-                        transaction.state = TransactionState.COMPLATED;
-                        transaction.type = TransactionType.DEPOSIT;
-                        transaction.hash = txid;
-
-                        //simdilik kalsin. deposit'de from bizim icin onemli mi?
-                        //transaction.from = ?;
-
-                        transaction.to = toWallet.address;
-                        transaction.amount = utxo.amount;
-                        transaction.fee = fee.toString();
-                        transaction.processedBlockNumber = blockNumber.toString();
-                        transaction.complatedBlockNumber = latestBlockNumber.toString();
-                        transactions[batchIndex].push(transaction);
-                    }
-
-                    if(isExistsVinWallet) {
-
-                        //todo: vin'deki utxo'lari vinTxIds'e gore spent'e cek.
-                        for(let j = 0; j < vinAddresses.length; j++ ) {
-                            //not: mantiken bir transactionun vout'unda aynı adresten iki cikti olmamasi lazim.
-                            //bende utxo'lari ona gore olusturduguma gore asagidaki sorgu dogru olmali.
-                            let utxo = await this.utxoService.findOne({
-                                blockchainName : BlockchainName.BITCOIN,
-                                txid : vinTxIds[j],
-                                address : vinAddresses[j],
-                            });
-
-                            if(utxo) {
-                                utxo.state = UtxoState.SPENT;
-                                utxo.usedTxid = txid;
-                                utxos[batchIndex].push(utxo);
-                            }
-                            
-                        }
-
-                        for(let j = 0; j < voutAddresses.length; j++) {
-                            let toWallet = await this.walletService.findOne({
-                                blockchainName : BlockchainName.BITCOIN,
-                                address : voutAddresses[j]   
-                            });
     
-                            if(toWallet) {
-                                let utxo = new Utxo();
-                                utxo.txid = txid;
-                                utxo.vout = voutAddresses.indexOf(toWallet.address);
-                                utxo.address = toWallet.address;
-                                utxo.scriptPubKey = voutScriptPubKeys[utxo.vout];
-                                utxo.blockchainName = toWallet.blockchainName;
-                                utxo.amount = (new BigNumber(voutValues[utxo.vout])).toString();
-                                utxo.state = UtxoState.UN_SPENT;
-                                utxos[batchIndex].push(utxo);
+                } while(hasError && tryCount < 40);
 
-                            }
-                        }
-
-                        //withdraw veya virman
-                        //islemleri biz yaptik. her zaman tek bir addrese para gonderiyoz.
-                        //ve bu gonderilen address vin'de hic bir zaman olmayacak. (ya 0 address'e 1..n'den yada 0'dan cold wallet'a gonderecez.)
-                        const toAddress = voutAddresses.filter(address => !vinAddresses.includes(address))[0];
-                        if(toAddress) {
-                            let toWallet = await this.walletService.findOne({
-                                blockchainName : BlockchainName.BITCOIN,
-                                address : toAddress   
-                            });
-    
-                            let voutIndex = voutAddresses.indexOf(toAddress);
-
-
-                            // WITHDRAW + VIRMAN
-                            const transaction = await this.transactionService.findByTxHash(BlockchainName.BITCOIN, txid);
-                            if (!transaction) {
-                                // TODO: Handle case if txDoc is null
-                            } else {
-    
-                                transaction.state = TransactionState.COMPLATED;
-                                transaction.amount = voutValues[voutIndex].toString();
-                                transaction.type = (toWallet == null) ? TransactionType.WITHDRAW : TransactionType.VIRMAN;
-                                transaction.fee = fee.toString();
-                                transaction.processedBlockNumber = blockNumber.toString();
-                                transaction.complatedBlockNumber = latestBlockNumber.toString();        
-                                transactions[batchIndex].push(transaction);
-                            }
-
-                        } else {
-                            //nsa'da buraya girmez.
-
-                        }
-
-                    }
-                    
-                } catch (error) {
+                if(hasError) {
                     let transaction = new Transaction();
                     transaction.processedBlockNumber = blockNumber.toString();
                     transaction.blockchainName = BlockchainName.BITCOIN;
                     transaction.state = TransactionState.COMPLATED;
-                    transaction.hash = txid;
+                    transaction.hash = txId;
                     transaction.hasError = true;
-                    transaction.error = error?.message || error?.toString();
+                    transaction.error = errorMessage;
                     transactions[batchIndex].push(transaction); 
                 }
             }
