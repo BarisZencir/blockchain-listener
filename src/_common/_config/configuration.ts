@@ -82,7 +82,7 @@ export default () => ({
             apiKey: process.env.NETWORK_TRON_API_KEY,
             // apiPrivateKey: process.env.NETWORK_TRON_API_PRIVATE_KEY,
             starterBlockNumber : new BigNumber(process.env.NETWORK_TRON_STARTER_BLOCK_NUMBER || 0),
-            blockGap : new BigNumber(process.env.NETWORK_ETHEREUM_TOKEN_GROUP_INDEX || 0),
+            blockGap : new BigNumber(process.env.NETWORK_TRON_LISTENER_BLOCK_GAP || 0),
             tokenGroups : generateTokenGroups(BlockchainName.TRON),
             batchLimit : parseInt(process.env.NETWORK_TRON_LISTENER_BATCH_LIMIT || "10"),
         },
