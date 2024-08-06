@@ -8,6 +8,7 @@ import { Block } from 'src/block/block.model';
 import { BlockchainName } from 'src/_common/enums/blockchain.name.enums';
 import { TransactionService } from 'src/transaction/transaction.service';
 import { Transaction } from 'src/transaction/transaction.model';
+import { sleep } from 'src/_common/utils/sandbox.utils';
 
 @Injectable()
 export class BlockListenerScheduler implements OnModuleInit {
@@ -65,20 +66,21 @@ export class BlockListenerScheduler implements OnModuleInit {
             let liveBlockNumber = await this.blockListenerService.getBlockNumber();
             let blockNumberDiff = liveBlockNumber.minus(this.blockGap).minus(this.currentBlockNumber);
             if(blockNumberDiff.lte(0)){
+                await sleep(1000);
                 return;
             }
 
-            let batchSize = this.batchLimit;
-            if(blockNumberDiff.lt(batchSize)) {
-                batchSize = blockNumberDiff.toNumber();
+            let batchLimit = this.batchLimit;
+            if(blockNumberDiff.lt(batchLimit)) {
+                batchLimit = blockNumberDiff.toNumber();
             }
             
             let promises = [];
             let nextBlockNumber = this.currentBlockNumber;
             
-            let transactionArray2D: Transaction[][] = Array.from({ length: batchSize }, () => []);
+            let transactionArray2D: Transaction[][] = Array.from({ length: batchLimit }, () => []);
 
-            for (let i = 0; i < batchSize; i++) {
+            for (let i = 0; i < batchLimit; i++) {
 
                 if(this.retryBlock.length) {
                     let blockNumber = this.retryBlock.shift();

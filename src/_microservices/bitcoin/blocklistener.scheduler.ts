@@ -10,6 +10,7 @@ import { TransactionService } from 'src/transaction/transaction.service';
 import { Transaction } from 'src/transaction/transaction.model';
 import { Utxo } from 'src/utxo/utxo.model';
 import { UtxoService } from 'src/utxo/utxo.service';
+import { sleep } from 'src/_common/utils/sandbox.utils';
 
 @Injectable()
 export class BlockListenerScheduler implements OnModuleInit {
@@ -71,21 +72,22 @@ export class BlockListenerScheduler implements OnModuleInit {
             let liveBlockNumber = await this.blockListenerService.getBlockNumber();
             let blockNumberDiff = liveBlockNumber.minus(this.blockGap).minus(this.currentBlockNumber);
             if(blockNumberDiff.lte(0)){
+                await sleep(120000);
                 return;
             }
 
-            let batchSize = this.batchLimit;
-            if(blockNumberDiff.lt(batchSize)) {
-                batchSize = blockNumberDiff.toNumber();
+            let batchLimit = this.batchLimit;
+            if(blockNumberDiff.lt(batchLimit)) {
+                batchLimit = blockNumberDiff.toNumber();
             }
             
             let promises = [];
             let nextBlockNumber = this.currentBlockNumber;
             
-            let transactionArray2D: Transaction[][] = Array.from({ length: batchSize }, () => []);
-            let utxoArray2D: Utxo[][] = Array.from({ length: batchSize }, () => []);
+            let transactionArray2D: Transaction[][] = Array.from({ length: batchLimit }, () => []);
+            let utxoArray2D: Utxo[][] = Array.from({ length: batchLimit }, () => []);
 
-            for (let i = 0; i < batchSize; i++) {
+            for (let i = 0; i < batchLimit; i++) {
                 if(this.retryBlock.length) {
                     let blockNumber = this.retryBlock.shift();
                     promises.push(this.blockListenerService.proccessBlock(transactionArray2D, utxoArray2D, i, blockNumber, liveBlockNumber, this.retryBlock));

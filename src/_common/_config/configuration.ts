@@ -43,6 +43,24 @@ const generateTokenGroups = (network: string): Array<Map<string, string>> => {
     return list;
 };
 
+// let list = [];
+const generateByKey = (network: string, key : string): string => {
+    let i = process.env[`NETWORK_${network}_TOKEN_GROUP_INDEX`];
+    let result = '';
+    if(i == "-1") {
+        result = process.env[`NETWORK_${network}_${key}`]
+        // list.push(`NETWORK_${network}_${key}`);
+    } else {
+        result = process.env[`NETWORK_${network}_TOKEN_GROUP_${i}_${key}`];
+        // list.push(`NETWORK_${network}_TOKEN_GROUP_${i}_${key}`);
+        if(!result) {
+            result = process.env[`NETWORK_${network}_${key}`]
+        }
+    }
+    // console.log(JSON.stringify(list));
+    return result;
+};
+
 
 export default () => ({
     config: {
@@ -58,6 +76,8 @@ export default () => ({
     },
     network: {
         bitcoin : {
+            clientType : process.env.NETWORK_BITCOIN_CLIENT_TYPE,
+            network : process.env.NETWORK_BITCOIN_NETWORK,
             host : process.env.NETWORK_BITCOIN_HOST,
             port: parseInt(process.env.NETWORK_BITCOIN_PORT),
             username : process.env.NETWORK_BITCOIN_USERNAME,
@@ -65,37 +85,39 @@ export default () => ({
             starterBlockNumber : new BigNumber(process.env.NETWORK_BITCOIN_STARTER_BLOCK_NUMBER || 0),
             blockGap : new BigNumber(process.env.NETWORK_BITCOIN_LISTENER_BLOCK_GAP || 0),
             satoshiFee : new BigNumber(process.env.NETWORK_BITCOIN_SATOSHI_FEE || 0),
-            batchLimit : parseInt(process.env.NETWORK_BITCOIN_LISTENER_BATCH_LIMIT || "10"),
+            batchLimit : parseInt(process.env.NETWORK_BITCOIN_LISTENER_BATCH_LIMIT || "1"),
+            batchSize : parseInt(process.env.NETWORK_BITCOIN_LISTENER_BATCH_SIZE || "1"),
 
         },
         ethereum : {
-            ws: process.env.NETWORK_ETHEREUM_WS,
+            ws: generateByKey(BlockchainName.ETHEREUM, 'WS'),
             chainId: parseInt(process.env.NETWORK_ETHEREUM_CHAIN_ID),
             networkId: parseInt(process.env.NETWORK_ETHEREUM_NETWORK_ID),
             starterBlockNumber : new BigNumber(process.env.NETWORK_ETHEREUM_STARTER_BLOCK_NUMBER || 0),
             blockGap : new BigNumber(process.env.NETWORK_ETHEREUM_LISTENER_BLOCK_GAP || 0),
             tokenGroups : generateTokenGroups(BlockchainName.ETHEREUM),
-            batchLimit : parseInt(process.env.NETWORK_ETHEREUM_LISTENER_BATCH_LIMIT || "10"),
+            batchLimit : parseInt(process.env.NETWORK_ETHEREUM_LISTENER_BATCH_LIMIT || "1"),
+            batchSize : parseInt(process.env.NETWORK_ETHEREUM_LISTENER_BATCH_SIZE || "1"),
         },
         tron : {
-            fullHost: process.env.NETWORK_TRON_FULL_NODE,
-            apiKey: process.env.NETWORK_TRON_API_KEY,
+            fullHost: generateByKey(BlockchainName.TRON, 'FULL_NODE'),
+            apiKey: generateByKey(BlockchainName.TRON, 'API_KEY'),
             // apiPrivateKey: process.env.NETWORK_TRON_API_PRIVATE_KEY,
             starterBlockNumber : new BigNumber(process.env.NETWORK_TRON_STARTER_BLOCK_NUMBER || 0),
             blockGap : new BigNumber(process.env.NETWORK_TRON_LISTENER_BLOCK_GAP || 0),
             tokenGroups : generateTokenGroups(BlockchainName.TRON),
-            batchLimit : parseInt(process.env.NETWORK_TRON_LISTENER_BATCH_LIMIT || "10"),
+            batchLimit : parseInt(process.env.NETWORK_TRON_LISTENER_BATCH_LIMIT || "1"),
+            batchSize : parseInt(process.env.NETWORK_TRON_LISTENER_BATCH_SIZE || "1"),
         },
         avalanche : {
-            ws: process.env.NETWORK_AVALANCHE_WS,
+            ws: generateByKey(BlockchainName.AVALANCHE, 'WS'),
             chainId: parseInt(process.env.NETWORK_AVALANCHE_CHAIN_ID),
             networkId: parseInt(process.env.NETWORK_AVALANCHE_NETWORK_ID),
             starterBlockNumber : new BigNumber(process.env.NETWORK_AVALANCHE_STARTER_BLOCK_NUMBER || 0),
             blockGap : new BigNumber(process.env.NETWORK_AVALANCHE_LISTENER_BLOCK_GAP || 0),
             tokenGroups : generateTokenGroups(BlockchainName.AVALANCHE),
-            batchLimit : parseInt(process.env.NETWORK_AVALANCHE_LISTENER_BATCH_LIMIT || "10"),
+            batchLimit : parseInt(process.env.NETWORK_AVALANCHE_LISTENER_BATCH_LIMIT || "1"),
+            batchSize : parseInt(process.env.NETWORK_AVALANCHE_LISTENER_BATCH_SIZE || "1"),
         },
-
-
     }
 });

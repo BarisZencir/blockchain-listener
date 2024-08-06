@@ -14,6 +14,7 @@ import { Transaction } from 'src/transaction/transaction.model';
 import { TransactionState, TransactionType } from 'src/transaction/enum/transaction.state';
 import { TransactionService } from 'src/transaction/transaction.service';
 import { Wallet } from 'src/wallet/wallet.model';
+import { Input, Output, QuickNodeClient } from './quicknode.client';
 
 type Settings = {
 	connectionInfo : {
@@ -24,31 +25,21 @@ type Settings = {
 	}
 };
 
-interface Input {
-	txid: string;
-	vout: number;
-}
-
-interface Output {
-	[address: string]: number;
-}
-  
-
 const BITCOIN_TO_SATOSHI = 100000000;
-
 
 @Injectable()
 export class BitcoinService implements OnModuleInit {
 	protected readonly logger = new Logger(BitcoinService.name);
 	private client: any;
 	protected settings: Settings | null;
-
+	private clientType : string;
 	constructor(
 		protected configService: ConfigService,
 		protected walletService: WalletService,
 		protected utxoService : UtxoService,
 	) {
 		this.client = null;
+		this.clientType = this.configService.get<string>("network.bitcoin.clientType");
 		this.settings = {
 			connectionInfo : {
 				host : this.configService.get<string>("network.bitcoin.host"),
@@ -77,30 +68,54 @@ export class BitcoinService implements OnModuleInit {
     }
 
     async connect(): Promise<boolean> {
+		
+		if(this.clientType == "bitcoin-core") {
+			if (this.settings?.connectionInfo?.host) {
+				try {
+					this.client = new Client(this.settings.connectionInfo);
+					if (this.client) {
+						const info = await this.client.getNetworkInfo();
+						if (info && info.networkactive) {
+							this.logger.debug('Bitcoin Network connection successful.');
+							return true;
+						} else {
+							this.client = null;
+							throw 'Cant listen Bitcoin Network Provider.';
+						}
+					} else {
+						this.client = null;
+						throw 'Cant Connect to Bitcoin Network Provider.';
+					}
+		
+				} catch(error) {
+					throw error;
+				}
+			} else {
+				throw new Error('Network Error. There is no connection to settings defined.');
+			}
+		}
 
-        if (this.settings?.connectionInfo?.host) {
-			try {
-				this.client = new Client(this.settings.connectionInfo);
-				if (this.client) {
-					const info = await this.client.getNetworkInfo();
-					if (info && info.networkactive) {
+		if(this.clientType == "quicknode") {
+			if (this.settings?.connectionInfo?.host) {
+				try {
+					const network = this.configService.get<string>("network.bitcoin.network");
+					this.client = new QuickNodeClient(this.settings.connectionInfo.host, network);
+					const info = await this.client.getBlockCount();
+					if (info) {
 						this.logger.debug('Bitcoin Network connection successful.');
 						return true;
 					} else {
 						this.client = null;
 						throw 'Cant listen Bitcoin Network Provider.';
-					}
-				} else {
-					this.client = null;
-					throw 'Cant Connect to Bitcoin Network Provider.';
+					}	
+				} catch(error) {
+					throw error;
 				}
-	
-			} catch(error) {
-				throw error;
+			} else {
+				throw new Error('Network Error. There is no connection to settings defined.');
 			}
-        } else {
-            throw new Error('Network Error. There is no connection to settings defined.');
-        }
+		}
+
     }
 
 	async isConnected(): Promise<boolean> {

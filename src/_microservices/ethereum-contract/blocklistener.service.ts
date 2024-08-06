@@ -18,6 +18,7 @@ import { WalletService } from 'src/wallet/wallet.service';
 export class BlockListenerService extends EthereumContractService implements OnModuleInit {
 
     logger = new Logger(BlockListenerService.name);
+    private batchSize : number;
 
     constructor(
         protected configService: ConfigService,
@@ -27,6 +28,7 @@ export class BlockListenerService extends EthereumContractService implements OnM
 
     ) { 
         super(configService, walletService);
+        this.batchSize = this.configService.get<number>("network.ethereum.batchSize");
     }
 
     async onModuleInit(): Promise<void> {
@@ -131,39 +133,51 @@ export class BlockListenerService extends EthereumContractService implements OnM
                 }
             }
 
-            for (let event of events) {
-                let txId = event.transactionHash;
+            for (let i = 0; i < events.length; i += this.batchSize) {
 
+                let batchTransactions = new Array<Transaction>();
+                const currentBatch = events.slice(i, i + this.batchSize);
 
-                let hasError = false;
-                let tryCount = 0;
-                let errorMessage : string;
-                do {
-                    try {
-                        hasError = false;
-                        await this.processEvent(event, transactions[batchIndex], blockNumber, latestBlockNumber);
-                    } catch (error) {
-                        hasError = true;
-                        tryCount++;
-                        errorMessage = error?.message || error?.toString();
+                // Her işlem için bir promise oluştur
+                const promises = currentBatch.map(async (event: ITransferEvent) => {
+
+                    let txId = event.transactionHash;
+
+                    let hasError = false;
+                    let tryCount = 0;
+                    let errorMessage : string;
+                    do {
+                        try {
+                            hasError = false;
+                            await this.processEvent(event, batchTransactions, blockNumber, latestBlockNumber);
+                        } catch (error) {
+                            hasError = true;
+                            tryCount++;
+                            errorMessage = error?.message || error?.toString();
+                        }
+        
+                    } while(hasError && tryCount < 40);
+
+                    if(hasError) {
+                        let transaction = new Transaction();
+                        transaction.processedBlockNumber = blockNumber.toString();
+                        transaction.blockchainName = BlockchainName.ETHEREUM;
+                        transaction.tokenName = event.tokenName;
+                        transaction.state = TransactionState.COMPLATED;
+                        transaction.hash = txId;
+                        transaction.hasError = true;
+                        transaction.event = JSON.stringify(event);
+                        transaction.error = errorMessage;
+                        batchTransactions.push(transaction);
                     }
-    
-                } while(hasError && tryCount < 40);
+                });
 
-                if(hasError) {
-                    let transaction = new Transaction();
-                    transaction.processedBlockNumber = blockNumber.toString();
-                    transaction.blockchainName = BlockchainName.ETHEREUM;
-                    transaction.tokenName = event.tokenName;
-                    transaction.state = TransactionState.COMPLATED;
-                    transaction.hash = txId;
-                    transaction.hasError = true;
-                    transaction.event = JSON.stringify(event);
-                    transaction.error = errorMessage;
+                // 'Promise.all' ile tüm promise'leri bekle
+                await Promise.all(promises);
+                for(const transaction of batchTransactions) {
                     transactions[batchIndex].push(transaction);
                 }
-            }
-            
+            }            
         } catch (error) {
             if(reTryCount < 4) {
                 await sleep(2000);

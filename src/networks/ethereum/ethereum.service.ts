@@ -92,14 +92,15 @@ export class EthereumService implements OnModuleInit {
             this.web3 = new Web3(new Web3.providers.HttpProvider(this.settings.ws));
 
             if (this.web3) {
-                const isListening = await this.web3.eth.net.isListening();
-                if (isListening) {
-                    console.log('Ethereum Network connection successful.');
-                    return true;
-                } else {
-                    this.web3 = null;
-                    throw new Error('Cannot listen to Ethereum Network Provider.');
-                }
+                return true;
+                // const isListening = await this.web3.eth.net.isListening();
+                // if (isListening) {
+                //     console.log('Ethereum Network connection successful.');
+                //     return true;
+                // } else {
+                //     this.web3 = null;
+                //     throw new Error('Cannot listen to Ethereum Network Provider.');
+                // }
             } else {
                 this.web3 = null;
                 throw new Error('Cannot connect to provider.');

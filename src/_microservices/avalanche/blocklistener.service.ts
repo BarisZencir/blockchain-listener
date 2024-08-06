@@ -16,6 +16,7 @@ import { WalletService } from 'src/wallet/wallet.service';
 export class BlockListenerService extends AvalancheService implements OnModuleInit {
 
     logger = new Logger(BlockListenerService.name);
+    private batchSize : number;
 
     constructor(
         protected configService: ConfigService,
@@ -25,6 +26,7 @@ export class BlockListenerService extends AvalancheService implements OnModuleIn
 
     ) { 
         super(configService, walletService);
+        this.batchSize = this.configService.get<number>("network.bitcoin.batchSize");
     }
 
     async onModuleInit(): Promise<void> {
@@ -118,35 +120,49 @@ export class BlockListenerService extends AvalancheService implements OnModuleIn
             }
 
             const transactionHashList = blockJSON.transactions || [];
-            for (let i = 0; i < transactionHashList.length; i++) {
-                let txHash = transactionHashList[i];
+            for (let i = 0; i < transactionHashList.length; i += this.batchSize) {
 
-                let hasError = false;
-                let tryCount = 0;
-                let errorMessage : string;
-                do {
-                    try {
-                        hasError = false;
-                        await this.processTransaction(txHash, transactions[batchIndex], blockNumber, latestBlockNumber);
-                    } catch (error) {
-                        hasError = true;
-                        tryCount++;
-                        errorMessage = error?.message || error?.toString();
+                let batchTransactions = new Array<Transaction>();
+                const currentBatch = transactionHashList.slice(i, i + this.batchSize);
+
+                // Her işlem için bir promise oluştur
+                const promises = currentBatch.map(async (txHash: string) => {
+
+                    let hasError = false;
+                    let tryCount = 0;
+                    let errorMessage : string;
+                    do {
+                        try {
+                            hasError = false;
+                            await this.processTransaction(txHash, batchTransactions, blockNumber, latestBlockNumber);
+                        } catch (error) {
+                            hasError = true;
+                            tryCount++;
+                            errorMessage = error?.message || error?.toString();
+                        }
+        
+                    } while(hasError && tryCount < 40);
+
+                    if(hasError) {
+                        let transaction = new Transaction();
+                        transaction.processedBlockNumber = blockNumber.toString();
+                        transaction.blockchainName = BlockchainName.AVALANCHE;
+                        transaction.state = TransactionState.COMPLATED;
+                        transaction.hash = txHash;
+                        transaction.hasError = true;
+                        transaction.error = errorMessage;
+                        batchTransactions.push(transaction);  
                     }
-    
-                } while(hasError && tryCount < 40);
 
-                if(hasError) {
-                    let transaction = new Transaction();
-                    transaction.processedBlockNumber = blockNumber.toString();
-                    transaction.blockchainName = BlockchainName.AVALANCHE;
-                    transaction.state = TransactionState.COMPLATED;
-                    transaction.hash = txHash;
-                    transaction.hasError = true;
-                    transaction.error = errorMessage;
-                    transactions[batchIndex].push(transaction);  
+                });
+
+                // 'Promise.all' ile tüm promise'leri bekle
+                await Promise.all(promises);
+                for(const transaction of batchTransactions) {
+                    transactions[batchIndex].push(transaction);
                 }
             }
+            
         } catch (error) {
             if(reTryCount < 4) {
                 await sleep(2000);

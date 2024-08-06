@@ -19,6 +19,7 @@ import { WalletService } from 'src/wallet/wallet.service';
 export class BlockListenerService extends BitcoinService implements OnModuleInit {
 
     logger = new Logger(BlockListenerService.name);
+    private batchSize : number;
 
     constructor(
         protected configService: ConfigService,        
@@ -29,6 +30,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
 
     ) {
         super(configService, walletService, utxoService);
+        this.batchSize = this.configService.get<number>("network.bitcoin.batchSize");
     }
 
     async onModuleInit(): Promise<void> {
@@ -95,7 +97,12 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
         for (let n = 0; n < txJSON.vin.length; n++) {
             let vin = txJSON.vin[n];
             let vinTxRaw = await this.getRawTransaction(vin.txid);
-            let vinAddress = vinTxRaw.vout[vin.vout].scriptPubKey.addresses[0].toLowerCase();
+            let vinAddress : string;
+            if(vinTxRaw.vout[vin.vout].scriptPubKey.addresses && vinTxRaw.vout[vin.vout].scriptPubKey.addresses.length) {
+                vinAddress = vinTxRaw.vout[vin.vout].scriptPubKey.addresses[0].toLowerCase();
+            } else if(vinTxRaw.vout[vin.vout].scriptPubKey.address) {
+                vinAddress = vinTxRaw.vout[vin.vout].scriptPubKey.address.toLowerCase();
+            }
             let vinValue = this.convertBitcoinToSatoshi(vinTxRaw.vout[vin.vout].value);
             
             vinTxIds.push(vin.txid);
@@ -106,7 +113,13 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
 
         for (let n = 0; n < txJSON.vout.length; n++) {
             let vout = txJSON.vout[n];
-            let voutAddress = vout.scriptPubKey.addresses[0].toLowerCase();
+            let voutAddress : string;
+            if(vout.scriptPubKey.addresses && vout.scriptPubKey.addresses.length) {
+                voutAddress = vout.scriptPubKey.addresses[0].toLowerCase();
+            } else if(vout.scriptPubKey.address) {
+                voutAddress = vout.scriptPubKey.address.toLowerCase();
+            }
+
             let voutValue = this.convertBitcoinToSatoshi(vout.value);
 
             voutAddresses.push(voutAddress);
@@ -265,33 +278,48 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
                 this.logger.debug("block has tx");
             }
 
-            for (let i = 0; i < transactionHashList.length; i++) {
-                let txId = transactionHashList[i];
+            for (let i = 0; i < transactionHashList.length; i += this.batchSize) {
 
-                let hasError = false;
-                let tryCount = 0;
-                let errorMessage : string;
-                do {
-                    try {
-                        hasError = false;
-                        await this.processTransaction(txId, transactions[batchIndex], utxos[batchIndex], blockNumber, latestBlockNumber);
-                    } catch (error) {
-                        hasError = true;
-                        tryCount++;
-                        errorMessage = error?.message || error?.toString();
+                let batchTransactions = new Array<Transaction>();
+                let batchUtxos = new Array<Utxo>();
+                const currentBatch = transactionHashList.slice(i, i + this.batchSize);
+
+                // Her işlem için bir promise oluştur
+                const promises = currentBatch.map(async (txId: string) => {
+                    let hasError = false;
+                    let tryCount = 0;
+                    let errorMessage : string;
+                    
+                    do {
+                        try {
+                            hasError = false;
+                            await this.processTransaction(txId, batchTransactions, batchUtxos, blockNumber, latestBlockNumber);
+                        } catch (error) {
+                            hasError = true;
+                            tryCount++;
+                            errorMessage = error?.message || error?.toString();
+                        }
+                    } while (hasError && tryCount < 40);
+
+                    if (hasError) {
+                        let transaction = new Transaction();
+                        transaction.processedBlockNumber = blockNumber.toString();
+                        transaction.blockchainName = BlockchainName.BITCOIN;
+                        transaction.state = TransactionState.COMPLATED;
+                        transaction.hash = txId;
+                        transaction.hasError = true;
+                        transaction.error = errorMessage;
+                        batchTransactions.push(transaction);
                     }
-    
-                } while(hasError && tryCount < 40);
+                });
 
-                if(hasError) {
-                    let transaction = new Transaction();
-                    transaction.processedBlockNumber = blockNumber.toString();
-                    transaction.blockchainName = BlockchainName.BITCOIN;
-                    transaction.state = TransactionState.COMPLATED;
-                    transaction.hash = txId;
-                    transaction.hasError = true;
-                    transaction.error = errorMessage;
-                    transactions[batchIndex].push(transaction); 
+                // 'Promise.all' ile tüm promise'leri bekle
+                await Promise.all(promises);
+                for(const transaction of batchTransactions) {
+                    transactions[batchIndex].push(transaction);
+                }
+                for(const utxo of batchUtxos) {
+                    utxos[batchIndex].push(utxo);
                 }
             }
         } catch (error) {

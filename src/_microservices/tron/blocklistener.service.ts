@@ -16,15 +16,16 @@ import { WalletService } from 'src/wallet/wallet.service';
 export class BlockListenerService extends TronService implements OnModuleInit {
 
     logger = new Logger(BlockListenerService.name);
-
+    private batchSize : number;
     constructor(
         protected configService: ConfigService,
         protected readonly blockService: BlockService,
         protected readonly walletService: WalletService,
         protected readonly transactionService: TransactionService
-
+        
     ) { 
         super(configService, walletService);
+        this.batchSize = this.configService.get<number>("network.tron.batchSize");
     }
 
     async onModuleInit(): Promise<void> {
@@ -132,37 +133,49 @@ export class BlockListenerService extends TronService implements OnModuleInit {
             }
 
             if (blockJson && blockJson.transactions) {
-                for (let i = 0; i < blockJson.transactions.length; i++) {
-                    const txJson = blockJson.transactions[i];
-                    const txId = txJson.txID;
-                    if (txJson.raw_data.contract[0].type === 'TransferContract') {
-                        
-                        let hasError = false;
-                        let tryCount = 0;
-                        let errorMessage : string;
-                        do {
-                            try {
-                                hasError = false;
-                                await this.processTransaction(txId, transactions[batchIndex], blockNumber, latestBlockNumber);
-                            } catch (error) {
-                                hasError = true;
-                                tryCount++;
-                                errorMessage = error?.message || error?.toString();
-                            }
-            
-                        } while(hasError && tryCount < 40);
 
-                        if(hasError) {
-                            let transaction = new Transaction();
-                            transaction.processedBlockNumber = blockNumber.toString();
-                            transaction.blockchainName = BlockchainName.TRON;
-                            transaction.state = TransactionState.COMPLATED;
-                            transaction.hash = txId;
-                            transaction.hasError = true;
-                            transaction.error = errorMessage;
-                            transactions[batchIndex].push(transaction);  
+                for (let i = 0; i < blockJson.transactions.length; i += this.batchSize) {
+
+                    let batchTransactions = new Array<Transaction>();
+                    const currentBatch = blockJson.transactions.slice(i, i + this.batchSize);
+                    
+                    // Her işlem için bir promise oluştur
+                    const promises = currentBatch.map(async (txJson: any) => {
+
+                        const txId = txJson.txID;
+                        if (txJson.raw_data.contract[0].type === 'TransferContract') {
+                            
+                            let hasError = false;
+                            let tryCount = 0;
+                            let errorMessage : string;
+                            do {
+                                try {
+                                    hasError = false;
+                                    await this.processTransaction(txId, batchTransactions, blockNumber, latestBlockNumber, txJson);
+                                } catch (error) {
+                                    hasError = true;
+                                    tryCount++;
+                                    errorMessage = error?.message || error?.toString();
+                                }
+                            } while(hasError && tryCount < 40);
+
+                            if(hasError) {
+                                let transaction = new Transaction();
+                                transaction.processedBlockNumber = blockNumber.toString();
+                                transaction.blockchainName = BlockchainName.TRON;
+                                transaction.state = TransactionState.COMPLATED;
+                                transaction.hash = txId;
+                                transaction.hasError = true;
+                                transaction.error = errorMessage;
+                                batchTransactions.push(transaction);  
+                            }
                         }
-                        
+                    });
+
+                    // 'Promise.all' ile tüm promise'leri bekle
+                    await Promise.all(promises);
+                    for(const transaction of batchTransactions) {
+                        transactions[batchIndex].push(transaction);
                     }
                 }
             }

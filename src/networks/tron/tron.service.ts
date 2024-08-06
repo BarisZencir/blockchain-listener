@@ -124,12 +124,16 @@ export class TronService implements OnModuleInit {
 		if (this.tronWeb === null) {
 			return false;
 		}
-		try {
-			const isConnected = await this.tronWeb.isConnected();
-			return isConnected.fullNode && isConnected.solidityNode && isConnected.eventServer;
-		} catch {
-			return false;
-		}
+
+        return true;
+        //note: trowngrid 15/sec limiti var. her istekde bir de listening filan demek istemiyorum.
+
+        // try {
+		// 	const isConnected = await this.tronWeb.isConnected();
+		// 	return isConnected.fullNode && isConnected.solidityNode && isConnected.eventServer;
+		// } catch {
+		// 	return false;
+		// }
 	}
 
     async getBlockNumber(): Promise<BigNumber> {
