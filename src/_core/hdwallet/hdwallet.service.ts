@@ -25,8 +25,8 @@ export class HDWalletService implements OnModuleInit {
 			// networkName : "bitcoin"
 
 			return (new BitcoinHDWallet(mnemonic, {
-				derivePath: "m/84'/1'/0'/0",
-				networkName : "regtest"
+				derivePath: "m/84'/0'/0'/0",
+				networkName : "bitcoin"
 			})).generateAddresses(numberOfAddresses);
 		}
 
