@@ -29,11 +29,11 @@ export function startMicroservices(starterPort: number) {
     const services = [
     ];
 
-    // services.push({
-    //     path: 'dist/_microservices/bitcoin/main.js', port: starterPort++, envSettings: {
-    //         LOGGER_FILE_PREFIX: "bitcoin"
-    //     }
-    // })
+    services.push({
+        path: 'dist/_microservices/bitcoin/main.js', port: starterPort++, envSettings: {
+            LOGGER_FILE_PREFIX: "bitcoin"
+        }
+    })
 
     // services.push({
     //     path: 'dist/_microservices/ethereum/main.js', port: starterPort++, envSettings: {

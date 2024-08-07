@@ -81,7 +81,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
         if(minerTransaction) {
             return;
         }
-
+        
         let vinTxIds = [];
         let vinAddresses = [];
         let vinValues = [];
@@ -93,23 +93,6 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
         let voutTotalValue = new BigNumber(0);
 
         let fee : BigNumber;
-
-        for (let n = 0; n < txJSON.vin.length; n++) {
-            let vin = txJSON.vin[n];
-            let vinTxRaw = await this.getRawTransaction(vin.txid);
-            let vinAddress : string;
-            if(vinTxRaw.vout[vin.vout].scriptPubKey.addresses && vinTxRaw.vout[vin.vout].scriptPubKey.addresses.length) {
-                vinAddress = vinTxRaw.vout[vin.vout].scriptPubKey.addresses[0].toLowerCase();
-            } else if(vinTxRaw.vout[vin.vout].scriptPubKey.address) {
-                vinAddress = vinTxRaw.vout[vin.vout].scriptPubKey.address.toLowerCase();
-            }
-            let vinValue = this.convertBitcoinToSatoshi(vinTxRaw.vout[vin.vout].value);
-            
-            vinTxIds.push(vin.txid);
-            vinAddresses.push(vinAddress);
-            vinValues.push(vinValue);
-            vinTotalValue = vinTotalValue.plus(vinValue);
-        }
 
         for (let n = 0; n < txJSON.vout.length; n++) {
             let vout = txJSON.vout[n];
@@ -128,25 +111,39 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
             voutScriptPubKeys.push(vout.scriptPubKey.hex)
         }
 
-        //calculate fee
-        fee = vinTotalValue.minus(voutTotalValue);
-
-        let isExistsVinWallet = await this.walletService.exists({
-            blockchainName : BlockchainName.BITCOIN,
-            address : {$in : vinAddresses}
-        });
-
+        
         let isExistsVoutWallet = await this.walletService.exists({
             blockchainName : BlockchainName.BITCOIN,
             address : {$in : voutAddresses}
         });
 
-        if(!isExistsVinWallet && !isExistsVoutWallet) {
-            //bizle alakasi yok
-            return;
+        const transaction = await this.transactionService.findByTxHash(BlockchainName.BITCOIN, txId);
+        let isExistsVinWallet = transaction && transaction.state == TransactionState.REQUESTED;
+        
+        if(isExistsVoutWallet || isExistsVinWallet) {
+
+            for (let n = 0; n < txJSON.vin.length; n++) {
+                let vin = txJSON.vin[n];
+                let vinTxRaw = await this.getRawTransaction(vin.txid);
+                let vinAddress : string;
+                if(vinTxRaw.vout[vin.vout].scriptPubKey.addresses && vinTxRaw.vout[vin.vout].scriptPubKey.addresses.length) {
+                    vinAddress = vinTxRaw.vout[vin.vout].scriptPubKey.addresses[0].toLowerCase();
+                } else if(vinTxRaw.vout[vin.vout].scriptPubKey.address) {
+                    vinAddress = vinTxRaw.vout[vin.vout].scriptPubKey.address.toLowerCase();
+                }
+                let vinValue = this.convertBitcoinToSatoshi(vinTxRaw.vout[vin.vout].value);
+                
+                vinTxIds.push(vin.txid);
+                vinAddresses.push(vinAddress);
+                vinValues.push(vinValue);
+                vinTotalValue = vinTotalValue.plus(vinValue);
+            }
+
+            //calculate fee
+            fee = vinTotalValue.minus(voutTotalValue);
         }
 
-        if(!isExistsVinWallet && isExistsVoutWallet) {
+        if(isExistsVoutWallet && !isExistsVinWallet) {
             //deposit
             //to wallet bul. not: birden fazla adresimize gonderilmesi ihmal edildi.
             //ilk tespit edilin bizim adresimize gore islem yapilir.
@@ -181,7 +178,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
             transaction.complatedBlockNumber = latestBlockNumber.toString();
             transactions.push(transaction);
         }
-
+        
         if(isExistsVinWallet) {
 
             //todo: vin'deki utxo'lari vinTxIds'e gore spent'e cek.
