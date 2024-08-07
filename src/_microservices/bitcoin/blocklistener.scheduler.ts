@@ -49,7 +49,7 @@ export class BlockListenerScheduler implements OnModuleInit {
         this.lock = false;
     }
 
-    @Interval(200)
+    @Interval(60000)
     async handleCron() {
 
         if(this.lock) {
