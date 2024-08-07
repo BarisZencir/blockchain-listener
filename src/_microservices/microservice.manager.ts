@@ -68,13 +68,6 @@ export function startMicroservices(starterPort: number) {
     })
 
     services.push({
-        path: 'dist/_microservices/ethereum-contract/main.js', port: starterPort++, envSettings: {
-            NETWORK_ETHEREUM_TOKEN_GROUP_INDEX: 2,
-            LOGGER_FILE_PREFIX: "ethereum_contract_g2"
-        }
-    })
-
-    services.push({
         path: 'dist/_microservices/tron-contract/main.js', port: starterPort++, envSettings: {
             NETWORK_TRON_TOKEN_GROUP_INDEX: 0,
             LOGGER_FILE_PREFIX: "tron_contract_g0"
