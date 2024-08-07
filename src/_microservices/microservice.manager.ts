@@ -35,11 +35,11 @@ export function startMicroservices(starterPort: number) {
         }
     })
 
-    // services.push({
-    //     path: 'dist/_microservices/ethereum/main.js', port: starterPort++, envSettings: {
-    //         LOGGER_FILE_PREFIX: "ethereum"
-    //     }
-    // })
+    services.push({
+        path: 'dist/_microservices/ethereum/main.js', port: starterPort++, envSettings: {
+            LOGGER_FILE_PREFIX: "ethereum"
+        }
+    })
 
     services.push({
         path: 'dist/_microservices/tron/main.js', port: starterPort++, envSettings: {
@@ -47,25 +47,25 @@ export function startMicroservices(starterPort: number) {
         }
     })
 
-    // services.push({
-    //     path: 'dist/_microservices/avalanche/main.js', port: starterPort++, envSettings: {
-    //         LOGGER_FILE_PREFIX: "avalanche"
-    //     }
-    // })
+    services.push({
+        path: 'dist/_microservices/avalanche/main.js', port: starterPort++, envSettings: {
+            LOGGER_FILE_PREFIX: "avalanche"
+        }
+    })
 
-    // services.push({
-    //     path: 'dist/_microservices/ethereum-contract/main.js', port: starterPort++, envSettings: {
-    //         NETWORK_ETHEREUM_TOKEN_GROUP_INDEX: 0,
-    //         LOGGER_FILE_PREFIX: "ethereum_contract_g0"
-    //     }
-    // })
+    services.push({
+        path: 'dist/_microservices/ethereum-contract/main.js', port: starterPort++, envSettings: {
+            NETWORK_ETHEREUM_TOKEN_GROUP_INDEX: 0,
+            LOGGER_FILE_PREFIX: "ethereum_contract_g0"
+        }
+    })
 
-    // services.push({
-    //     path: 'dist/_microservices/ethereum-contract/main.js', port: starterPort++, envSettings: {
-    //         NETWORK_ETHEREUM_TOKEN_GROUP_INDEX: 1,
-    //         LOGGER_FILE_PREFIX: "ethereum_contract_g1"
-    //     }
-    // })
+    services.push({
+        path: 'dist/_microservices/ethereum-contract/main.js', port: starterPort++, envSettings: {
+            NETWORK_ETHEREUM_TOKEN_GROUP_INDEX: 1,
+            LOGGER_FILE_PREFIX: "ethereum_contract_g1"
+        }
+    })
 
     services.push({
         path: 'dist/_microservices/tron-contract/main.js', port: starterPort++, envSettings: {
