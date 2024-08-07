@@ -243,9 +243,9 @@ export class TronContractService extends TronService implements OnModuleInit {
             return Promise.all(events.map(async event => ({
                 transactionHash: event.transaction,
                 tokenName: tokenName,
-                from: await this.convertHexToTronAddress(event.result['src']),
-                to: await this.convertHexToTronAddress(event.result['dst']),
-                value: event.result['wad']
+                from: await this.convertHexToTronAddress(event.result['0']),
+                to: await this.convertHexToTronAddress(event.result['1']),
+                value: event.result['2']
             })));
 
         } catch (error) {
