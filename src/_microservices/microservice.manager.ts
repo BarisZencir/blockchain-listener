@@ -47,11 +47,11 @@ export function startMicroservices(starterPort: number) {
         }
     })
 
-    // services.push({
-    //     path: 'dist/_microservices/avalanche/main.js', port: starterPort++, envSettings: {
-    //         LOGGER_FILE_PREFIX: "avalanche"
-    //     }
-    // })
+    services.push({
+        path: 'dist/_microservices/avalanche/main.js', port: starterPort++, envSettings: {
+            LOGGER_FILE_PREFIX: "avalanche"
+        }
+    })
 
     // services.push({
     //     path: 'dist/_microservices/ethereum-contract/main.js', port: starterPort++, envSettings: {
