@@ -6,7 +6,7 @@ export enum EthereumTokenName {
     CTSI = "CTSI",
     ENS = "ENS",
     ZRO = "ZRO",
-
+    ARB = "ARB",
     UNI = "UNI",
     RDNT = "RDNT",
     ID = "ID",
