@@ -44,6 +44,7 @@ export class TronService implements OnModuleInit {
 
 		await this.initService();
 
+
         // let isConnected = await this.isConnected();
         // console.log("isConnected: " + isConnected);
 
@@ -56,11 +57,11 @@ export class TronService implements OnModuleInit {
         // let balance = await this.getBalance("TJ5YQBGWPyzMT3pm1dDd5zGz8Th6wr6D4T");
         // console.log("balance: " + balance);
 
-        // let tx = await this.sendRawTransaction(
-        //     "TJ5YQBGWPyzMT3pm1dDd5zGz8Th6wr6D4T", 
-        //     "TNUt8WZT4iB7vJScdEZt2RzgXJa78G46uP",
-        //     "123",
-        //     "your_private_key_here"
+        // let signer = await this.walletService.getWalletAsSigner(BlockchainName.TRON, 1);
+        // let tx = await this.createTransaction(
+        //     "TNXoiAJ3dct8Fjg4M9fkLFh9S2v9TXc32G", 
+        //     "28",
+        //     signer
         // );
 
         // console.log("tx: " + tx);
