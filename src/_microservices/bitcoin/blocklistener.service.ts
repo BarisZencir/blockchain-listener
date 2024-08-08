@@ -103,14 +103,13 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
                 voutAddress = vout.scriptPubKey.address.toLowerCase();
             }
 
-            let voutValue = this.convertBitcoinToSatoshi(vout.value);
+            let voutValue = this.convertCurrencyToUnit(vout.value);
 
             voutAddresses.push(voutAddress);
             voutValues.push(voutValue);
             voutTotalValue = voutTotalValue.plus(voutValue);
             voutScriptPubKeys.push(vout.scriptPubKey.hex)
         }
-
         
         let isExistsVoutWallet = await this.walletService.exists({
             blockchainName : BlockchainName.BITCOIN,
@@ -131,7 +130,7 @@ export class BlockListenerService extends BitcoinService implements OnModuleInit
                 } else if(vinTxRaw.vout[vin.vout].scriptPubKey.address) {
                     vinAddress = vinTxRaw.vout[vin.vout].scriptPubKey.address.toLowerCase();
                 }
-                let vinValue = this.convertBitcoinToSatoshi(vinTxRaw.vout[vin.vout].value);
+                let vinValue = this.convertCurrencyToUnit(vinTxRaw.vout[vin.vout].value);
                 
                 vinTxIds.push(vin.txid);
                 vinAddresses.push(vinAddress);

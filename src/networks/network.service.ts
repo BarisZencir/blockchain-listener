@@ -14,6 +14,7 @@ import { EthereumTokenName } from "./ethereum/enum/token.name";
 import { TronTokenName } from "./tron/enum/token.name";
 import { AvalancheContractService } from "./avalanche/avalanche.contract.service";
 import { AvalancheTokenName } from "./avalanche/enum/token.name";
+import BigNumber from "bignumber.js";
 
 @Injectable()
 export class NetworkService implements OnModuleInit {
@@ -53,6 +54,88 @@ export class NetworkService implements OnModuleInit {
 				BlockchainName.TRON, 0),
 			[BlockchainName.AVALANCHE] : await this.walletService.getWalletAsSignerByIndex(
 				BlockchainName.AVALANCHE, 0)			
+		}
+	}
+
+    convertCurrencyToUnit(blockchainName: BlockchainName, amount : string | number | BigNumber) : BigNumber {
+		switch(blockchainName) {
+			case BlockchainName.BITCOIN : {
+				return this.bitcoinService.convertCurrencyToUnit(amount);
+			}
+
+			case BlockchainName.ETHEREUM : {
+				return this.ethereumContractService.convertCurrencyToUnit(amount);
+			}
+
+			case BlockchainName.TRON : {
+				return this.tronContractService.convertCurrencyToUnit(amount);
+			}
+
+			case BlockchainName.AVALANCHE : {
+				return this.avalancheContractService.convertCurrencyToUnit(amount);
+			}
+
+		}
+	}
+	
+	convertUnitToCurrency(blockchainName: BlockchainName, amount : string | number | BigNumber) : BigNumber {
+		switch(blockchainName) {
+			case BlockchainName.BITCOIN : {
+				return this.bitcoinService.convertUnitToCurrency(amount);
+			}
+
+			case BlockchainName.ETHEREUM : {
+				return this.ethereumContractService.convertUnitToCurrency(amount);
+			}
+
+			case BlockchainName.TRON : {
+				return this.tronContractService.convertUnitToCurrency(amount);
+			}
+
+			case BlockchainName.AVALANCHE : {
+				return this.avalancheContractService.convertUnitToCurrency(amount);
+			}
+		}
+	}
+
+	convertTokenToDecimals(blockchainName: BlockchainName, tokenName : string, amount : string | number | BigNumber) : BigNumber {
+		switch(blockchainName) {
+			case BlockchainName.BITCOIN : {
+				throw Error("There is no token on bitcoin server.")
+			}
+
+			case BlockchainName.ETHEREUM : {
+				return this.ethereumContractService.convertTokenToDecimals(tokenName as EthereumTokenName, amount);
+			}
+
+			case BlockchainName.TRON : {
+				return this.tronContractService.convertTokenToDecimals(tokenName as TronTokenName, amount);
+			}
+
+			case BlockchainName.AVALANCHE : {
+				return this.avalancheContractService.convertTokenToDecimals(tokenName as AvalancheTokenName, amount);
+			}
+
+		}
+	}
+	
+	convertDecimalsToToken(blockchainName: BlockchainName, tokenName : string, amount : string | number | BigNumber) : BigNumber {
+		switch(blockchainName) {
+			case BlockchainName.BITCOIN : {
+				throw Error("There is no token on bitcoin server.")
+			}
+
+			case BlockchainName.ETHEREUM : {
+				return this.ethereumContractService.convertDecimalsToToken(tokenName as EthereumTokenName, amount);
+			}
+
+			case BlockchainName.TRON : {
+				return this.tronContractService.convertDecimalsToToken(tokenName as TronTokenName, amount);
+			}
+
+			case BlockchainName.AVALANCHE : {
+				return this.avalancheContractService.convertDecimalsToToken(tokenName as AvalancheTokenName, amount);
+			}
 		}
 	}
 

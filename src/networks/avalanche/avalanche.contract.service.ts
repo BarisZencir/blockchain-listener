@@ -20,6 +20,7 @@ import { Wallet } from 'src/wallet/wallet.model';
 import { sleep } from 'src/_common/utils/sandbox.utils';
 import { Transaction } from 'src/transaction/transaction.model';
 import { TransactionState, TransactionType } from 'src/transaction/enum/transaction.state';
+import { AvalancheTokenDecimals } from './enum/token.decimals';
 
 
 export interface ITransferEvent {
@@ -218,6 +219,23 @@ export class AvalancheContractService extends AvalancheService implements OnModu
     //         throw new Error('Unexpected type for allowance');
     //     }
     // }
+
+
+    convertTokenToDecimals(tokenName: AvalancheTokenName, amount: string | number | BigNumber) : BigNumber {
+        let decimals = AvalancheTokenDecimals[tokenName];
+        if(decimals) {
+            return (new BigNumber(amount)).times((new BigNumber(10)).pow(decimals));
+        }
+        return this.convertCurrencyToUnit(amount);
+    }
+
+	convertDecimalsToToken(tokenName: AvalancheTokenName, amount : string | number | BigNumber) : BigNumber {
+        let decimals = AvalancheTokenDecimals[tokenName];
+        if(decimals) {
+            return (new BigNumber(amount)).div((new BigNumber(10)).pow(decimals));
+        }
+        return this.convertUnitToCurrency(amount);
+    }
 
     async createTokenTransaction(tokenName: AvalancheTokenName, to: string, amount: string, _signer : Pick<Wallet, 'address' | 'privateKey' | 'nonce'>): Promise<Transaction> {
         await this.checkAndTryConnection();

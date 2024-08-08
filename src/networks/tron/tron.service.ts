@@ -20,6 +20,8 @@ type Settings = {
     // apiPrivateKey: string
 };
 
+const CURRENCY_TO_UNIT = new BigNumber("1000000");
+
 @Injectable()
 export class TronService implements OnModuleInit {
 	protected readonly logger = new Logger(TronService.name);
@@ -153,6 +155,14 @@ export class TronService implements OnModuleInit {
         const balance = await this.tronWeb.trx.getBalance(address);
         return BigNumber(balance);
     }
+	
+    convertCurrencyToUnit(amount : string | number | BigNumber) : BigNumber {
+		return (new BigNumber(amount)).times(CURRENCY_TO_UNIT);
+	}
+	
+	convertUnitToCurrency(amount : string | number | BigNumber) : BigNumber {
+		return (new BigNumber(amount)).div(CURRENCY_TO_UNIT);
+	}
 
     async createTransaction(to: string, amount: string, _signer: Wallet): Promise<Transaction> {
 

@@ -22,6 +22,10 @@ type Settings = {
     networkId : number
 };
 
+
+const CURRENCY_TO_UNIT = new BigNumber("1000000000000000000");
+
+
 @Injectable()
 export class AvalancheService implements OnModuleInit {
 	protected readonly logger = new Logger(AvalancheService.name);
@@ -134,8 +138,15 @@ export class AvalancheService implements OnModuleInit {
         await this.checkAndTryConnection();
         return BigNumber((await this.web3!.eth.getBalance(address)).toString());		
     }
-
     
+    convertCurrencyToUnit(amount : string | number | BigNumber) : BigNumber {
+		return (new BigNumber(amount)).times(CURRENCY_TO_UNIT);
+	}
+	
+	convertUnitToCurrency(amount : string | number | BigNumber) : BigNumber {
+		return (new BigNumber(amount)).div(CURRENCY_TO_UNIT);
+	}
+
     async createTransaction(to: string, amount: string, _signer: Wallet): Promise<Transaction> {
 		let transaction = new Transaction();
 

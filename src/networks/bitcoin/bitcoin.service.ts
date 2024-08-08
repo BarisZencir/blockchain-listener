@@ -25,7 +25,7 @@ type Settings = {
 	}
 };
 
-const BITCOIN_TO_SATOSHI = 100000000;
+const CURRENCY_TO_UNIT = new BigNumber("100000000");
 
 @Injectable()
 export class BitcoinService implements OnModuleInit {
@@ -156,15 +156,13 @@ export class BitcoinService implements OnModuleInit {
 		return this.client.getBlock(blockHash);
 	}
 
-	convertBitcoinToSatoshi(bitcoin : string | number | BigNumber) : BigNumber {
-		return (new BigNumber(bitcoin)).times(BITCOIN_TO_SATOSHI);
+    convertCurrencyToUnit(amount : string | number | BigNumber) : BigNumber {
+		return (new BigNumber(amount)).times(CURRENCY_TO_UNIT);
 	}
-
 	
-	convertSatoshiToBitcoin(satoshi : BigNumber) : number {
-		return satoshi.div(BITCOIN_TO_SATOSHI).toNumber();
+	convertUnitToCurrency(amount : string | number | BigNumber) : BigNumber {
+		return (new BigNumber(amount)).div(CURRENCY_TO_UNIT);
 	}
-
 
     // async getBalance(address: string): Promise<BigNumber> {
     //     await this.checkAndTryConnection();
@@ -200,7 +198,7 @@ export class BitcoinService implements OnModuleInit {
 			const utxos = await this.utxoService.findByAddressAndState(BlockchainName.BITCOIN, _signer.address, UtxoState.UN_SPENT);
 			const satoshiFee = this.configService.get<BigNumber>("network.bitcoin.satoshiFee");
 
-			const satoshiAmount = this.convertBitcoinToSatoshi(amount);
+			const satoshiAmount = this.convertCurrencyToUnit(amount);
 			const inputs: Input[] = [];
 			let totalAmount = new BigNumber(0);
 			let usedUtxos : Utxo[] = [];
@@ -222,7 +220,7 @@ export class BitcoinService implements OnModuleInit {
 
 			const change = totalAmount.minus(satoshiAmount).minus(satoshiFee);
 			if (change.gt(0)) {
-				outputs[_signer.address] = this.convertSatoshiToBitcoin(change); // Değişim adresi
+				outputs[_signer.address] = this.convertUnitToCurrency(change).toNumber(); // Değişim adresi
 			}
 
 			// Adım 3: İşlemi oluşturun
@@ -242,7 +240,7 @@ export class BitcoinService implements OnModuleInit {
 
 			transaction.hash = txid;
 			transaction.state = TransactionState.REQUESTED;
-			transaction.estimatedAmount = this.convertBitcoinToSatoshi(amount).toString();
+			transaction.estimatedAmount = satoshiAmount.toString();
 
 
 			let toWallet = await this.walletService.findOne({

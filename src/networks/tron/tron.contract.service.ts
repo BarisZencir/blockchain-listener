@@ -17,6 +17,7 @@ import { TronTokenName } from './enum/token.name';
 import { Wallet } from 'src/wallet/wallet.model';
 import { TronService } from './tron.service';
 import { ITransferEvent } from '../ethereum/ethereum.contract.service';
+import { TronTokenDecimals } from './enum/token.decimals';
 
 
 @Injectable()
@@ -187,6 +188,22 @@ export class TronContractService extends TronService implements OnModuleInit {
         } catch(error) {
             console.log(error);
         }
+    }
+
+    convertTokenToDecimals(tokenName: TronTokenName, amount: string | number | BigNumber) : BigNumber {
+        let decimals = TronTokenDecimals[tokenName];
+        if(decimals) {
+            return (new BigNumber(amount)).times((new BigNumber(10)).pow(decimals));
+        }
+        return this.convertCurrencyToUnit(amount);
+    }
+
+	convertDecimalsToToken(tokenName: TronTokenName, amount : string | number | BigNumber) : BigNumber {
+        let decimals = TronTokenDecimals[tokenName];
+        if(decimals) {
+            return (new BigNumber(amount)).div((new BigNumber(10)).pow(decimals));
+        }
+        return this.convertUnitToCurrency(amount);
     }
 
     async createTokenTransaction(tokenName: TronTokenName, to: string, amount: string, _signer: Pick<Wallet, 'address' | 'privateKey'>): Promise<Transaction> {

@@ -1,4 +1,4 @@
-import { Body, Controller, Logger, Post, UseFilters, UseGuards } from "@nestjs/common";
+import { Body, Controller, Logger, OnModuleInit, Post, UseFilters, UseGuards } from "@nestjs/common";
 import { TransactionService } from "./transaction.service";
 import { BlockchainName } from "src/_common/enums/blockchain.name.enums";
 import { Transaction } from "./transaction.model";
@@ -10,17 +10,23 @@ import { ApiException } from "src/_common/api/api.exeptions";
 import { ApiError } from "src/_common/api/api.error";
 import { ApiKeyGuard } from "src/_core/guards/api-key.guard";
 import { TransactionsControllerService } from "./transaction.controller.service";
+import BigNumber from "bignumber.js";
 
 @UseGuards(ApiKeyGuard)
 @Controller('transaction')
 @UseFilters(HttpExceptionFilter)
-export class TransactionController {
+export class TransactionController implements OnModuleInit {
 
     private readonly logger = new Logger(TransactionController.name);
     constructor(
         private transactionService : TransactionsControllerService,
         private networkService : NetworkService
         ) {
+    }
+
+    async onModuleInit(): Promise<void> {
+        let transactions = await this.getNotReadTransactions({});
+        console.log(transactions);
     }
 
     @Post("createWithdrawTransaction")
@@ -92,8 +98,22 @@ export class TransactionController {
         //max 100 tane getirsin.
         let transactions = await this.transactionService.findByLimit(filter, request.limit || 10);
 
-        let response = new Array<GetNotReadTransactionsResponseItem>();
+
+
+        let response = new Array<GetNotReadTransactionsResponseItem>();        
         transactions.forEach(transaction => {
+            let amount : BigNumber;
+            let fee : BigNumber;
+            if(transaction.tokenName) {
+                amount = this.networkService.convertDecimalsToToken(transaction.blockchainName, transaction.tokenName, transaction.amount);
+            } else {
+                amount = this.networkService.convertUnitToCurrency(transaction.blockchainName, transaction.amount);
+            }
+
+            if('undefined' != typeof transaction.fee) {
+                fee = this.networkService.convertUnitToCurrency(transaction.blockchainName, transaction.fee);
+            }
+            
             response.push({
                 id : transaction.id,
                 state : transaction.state,
@@ -106,8 +126,8 @@ export class TransactionController {
                 isRead : transaction.isRead,
                 from : transaction.from,
                 to : transaction.to,
-                amount : transaction.amount,
-                fee : transaction.fee,
+                amount : amount.toString(),
+                fee : fee ? fee.toString() : undefined,
                 requestedBlockNumber : transaction.requestedBlockNumber,
                 processedBlockNumber : transaction.processedBlockNumber,
                 complatedBlockNumber : transaction.complatedBlockNumber

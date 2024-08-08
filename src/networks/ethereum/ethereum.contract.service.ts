@@ -220,12 +220,20 @@ export class EthereumContractService extends EthereumService implements OnModule
     //     }
     // }
 
-    toTokenDecimal(tokenName: EthereumTokenName, amount: string) : string {
+    convertTokenToDecimals(tokenName: EthereumTokenName, amount: string | number | BigNumber) : BigNumber {
         let decimals = EthereumTokenDecimals[tokenName];
         if(decimals) {
-            return (new BigNumber(amount)).times((new BigNumber(10)).pow(decimals)).toString();
+            return (new BigNumber(amount)).times((new BigNumber(10)).pow(decimals));
         }
-        return this.web3.utils.numberToHex(this.web3!.utils.toWei(amount, 'ether'));
+        return this.convertCurrencyToUnit(amount);
+    }
+
+	convertDecimalsToToken(tokenName: EthereumTokenName, amount : string | number | BigNumber) : BigNumber {
+        let decimals = EthereumTokenDecimals[tokenName];
+        if(decimals) {
+            return (new BigNumber(amount)).div((new BigNumber(10)).pow(decimals));
+        }
+        return this.convertUnitToCurrency(amount);
     }
 
     async createTokenTransaction(tokenName: EthereumTokenName, to: string, amount: string, _signer : Pick<Wallet, 'address' | 'privateKey' | 'nonce'>): Promise<Transaction> {
@@ -233,7 +241,7 @@ export class EthereumContractService extends EthereumService implements OnModule
         let contract = this.tokenContracts.get(tokenName);
         const txCount = await this.web3!.eth.getTransactionCount(_signer.address); //note: simdilik boyle de bunu wallettan yonetecez.
 
-		let value = this.toTokenDecimal(tokenName, amount); 
+		let value = this.convertTokenToDecimals(tokenName, amount).toString(); 
 
         const data = contract.methods.transfer(to, value).encodeABI();
 
