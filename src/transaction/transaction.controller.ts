@@ -25,8 +25,8 @@ export class TransactionController implements OnModuleInit {
     }
 
     async onModuleInit(): Promise<void> {
-        let transactions = await this.getNotReadTransactions({});
-        console.log(transactions);
+        // let transactions = await this.getNotReadTransactions({});
+        // console.log(transactions);
     }
 
     @Post("createWithdrawTransaction")

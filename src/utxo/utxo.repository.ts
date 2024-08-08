@@ -14,6 +14,18 @@ export class UtxoRepository extends Repository<Utxo, UtxoDocument>{
         super(mongoModel);
     }
 
+    async safeSave(utxo: Utxo): Promise<Utxo> {
+        if(utxo.txid) {
+            let isExists = await this.exists({
+                txid : utxo.txid
+            });
+            if(isExists) {
+                return;// this.update(utxo);
+            }
+        }
+        return this.save(utxo);
+    }
+
     async findByAddress(blockchainName: Utxo["blockchainName"], address: Utxo["address"]): Promise<Utxo[]> {
         return this.mongoModel.find({ 
             blockchainName: blockchainName,

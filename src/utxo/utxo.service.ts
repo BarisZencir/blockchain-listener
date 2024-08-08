@@ -24,6 +24,10 @@ export class UtxoService extends Service<Utxo, UtxoDocument, UtxoRepository> imp
        
     }
 
+    safeSave(utxo: Utxo): Promise<Utxo> {
+        return this.repository.safeSave(utxo);
+    }
+
     async findByAddress(blockchainName : Utxo["blockchainName"], address: Utxo["address"]) : Promise<Utxo[]> {
         return this.repository.findByAddress(blockchainName, address);
     }

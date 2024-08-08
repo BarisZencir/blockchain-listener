@@ -126,9 +126,9 @@ export class BlockListenerScheduler implements OnModuleInit {
                 }
             }
 
-            await Promise.all(transactionsForSave.map(transaction => this.transactionService.save(transaction) ));
+            await Promise.all(transactionsForSave.map(transaction => this.transactionService.safeSave(transaction) ));
             await Promise.all(transactionsForUpdate.map(transaction => this.transactionService.update(transaction) ));
-            await Promise.all(utxosForSave.map(utxo => this.utxoService.save(utxo)));
+            await Promise.all(utxosForSave.map(utxo => this.utxoService.safeSave(utxo)));
             await Promise.all(utxosForUpdate.map(utxo => this.utxoService.update(utxo)));
 
             await this.blockListenerService.updateBlock(this.currentBlockNumber);
