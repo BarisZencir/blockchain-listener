@@ -54,7 +54,7 @@ export class QuickNodeClient {
     }
 
     async createAndSignRawTransaction(inputs: Input[], outputs: Output, wif : string): Promise<string> {
-        // Ağ seçimi (testnet veya mainnet)
+        // Ağ seçimi (testnet veya bitcoin)
         const bitcoinNetwork = bitcoin.networks[this.network]; // veya bitcoin.networks.bitcoin
         const ECPair = ECPairFactory(ecc);
 

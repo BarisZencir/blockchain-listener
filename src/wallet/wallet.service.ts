@@ -281,10 +281,23 @@ export class WalletService extends Service<Wallet, WalletDocument, WalletReposit
     }
 
 
-    async getWalletAsSigner(blockchainName : BlockchainName, index: number) : Promise<Wallet> {
+    async getWalletAsSignerByIndex(blockchainName : BlockchainName, index: Wallet["index"]) : Promise<Wallet> {
         let wallet = await this.repository.findOne({
             blockchainName : blockchainName, 
             index : index
+        });
+
+        if(wallet) {
+            wallet.privateKey = this.decrypt(wallet.privateKey);
+        }
+        return wallet;
+    }
+
+
+    async getWalletAsSignerByAddress(blockchainName : BlockchainName, address: Wallet["address"]) : Promise<Wallet> {
+        let wallet = await this.repository.findOne({
+            blockchainName : blockchainName, 
+            address : address
         });
 
         if(wallet) {

@@ -103,6 +103,14 @@ export class BitcoinService implements OnModuleInit {
 					const info = await this.client.getBlockCount();
 					if (info) {
 						this.logger.debug('Bitcoin Network connection successful.');
+
+
+
+						// # VIRMAN TEST
+						// let signer = await this.walletService.getWalletAsSignerByAddress(BlockchainName.BITCOIN, "bc1quz84h2a6e0y8j7g66qgph8s5kgmt6rwkgjl23c");
+						// let tx = await this.createTransaction("bc1qzs7mgdmmpehqrknx747nwxvhyk603v9rvku64l", "0.0001", signer);
+						// console.log(tx);
+
 						return true;
 					} else {
 						this.client = null;
@@ -183,7 +191,6 @@ export class BitcoinService implements OnModuleInit {
 	// 	}
 	// }
 
-	
 	// İşlem oluşturma işlevi
 	// amount örnek: "0.1" btc
 	async createTransaction(to: string, amount: string, _signer: Wallet): Promise<Transaction> {
