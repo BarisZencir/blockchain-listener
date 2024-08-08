@@ -84,10 +84,11 @@ export default () => ({
             password : process.env.NETWORK_BITCOIN_PASSWORD,
             starterBlockNumber : new BigNumber(process.env.NETWORK_BITCOIN_STARTER_BLOCK_NUMBER || 0),
             blockGap : new BigNumber(process.env.NETWORK_BITCOIN_LISTENER_BLOCK_GAP || 0),
-            satoshiFee : new BigNumber(process.env.NETWORK_BITCOIN_SATOSHI_FEE || 0),
             batchLimit : parseInt(process.env.NETWORK_BITCOIN_LISTENER_BATCH_LIMIT || "1"),
             batchSize : parseInt(process.env.NETWORK_BITCOIN_LISTENER_BATCH_SIZE || "1"),
-
+            gas : {
+                fee : new BigNumber(process.env.NETWORK_BITCOIN_FEE || 0),
+            }
         },
         ethereum : {
             ws: generateByKey(BlockchainName.ETHEREUM, 'WS'),
@@ -98,6 +99,16 @@ export default () => ({
             tokenGroups : generateTokenGroups(BlockchainName.ETHEREUM),
             batchLimit : parseInt(process.env.NETWORK_ETHEREUM_LISTENER_BATCH_LIMIT || "1"),
             batchSize : parseInt(process.env.NETWORK_ETHEREUM_LISTENER_BATCH_SIZE || "1"),
+
+            gas : {
+                limit : BigNumber(process.env.NETWORK_ETHEREUM_GAS_LIMIT || "1"),
+                price : BigNumber(process.env.NETWORK_ETHEREUM_GAS_PRICE || "1"),
+                token : {
+                    limit : BigNumber(process.env.NETWORK_ETHEREUM_TOKEN_GAS_LIMIT || "1"),
+                    price : BigNumber(process.env.NETWORK_ETHEREUM_TOKEN_GAS_PRICE || "1"),
+                }
+            },
+            
         },
         tron : {
             fullHost: generateByKey(BlockchainName.TRON, 'FULL_NODE'),
@@ -118,6 +129,15 @@ export default () => ({
             tokenGroups : generateTokenGroups(BlockchainName.AVALANCHE),
             batchLimit : parseInt(process.env.NETWORK_AVALANCHE_LISTENER_BATCH_LIMIT || "1"),
             batchSize : parseInt(process.env.NETWORK_AVALANCHE_LISTENER_BATCH_SIZE || "1"),
+
+            gas : {
+                limit : BigNumber(process.env.NETWORK_AVALANCHE_GAS_LIMIT || "1"),
+                price : BigNumber(process.env.NETWORK_AVALANCHE_GAS_PRICE || "1"),
+                token : {
+                    limit : BigNumber(process.env.NETWORK_AVALANCHE_TOKEN_GAS_LIMIT || "1"),
+                    price : BigNumber(process.env.NETWORK_AVALANCHE_TOKEN_GAS_PRICE || "1"),
+                }
+            },
         },
     }
 });

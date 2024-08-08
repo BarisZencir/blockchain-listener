@@ -150,6 +150,9 @@ export class EthereumService implements OnModuleInit {
 		let transaction = new Transaction();
 
         try {
+			const gasLimit = this.configService.get<BigNumber>("network.ethereum.gas.limit");
+			const gasPrice = this.configService.get<BigNumber>("network.ethereum.gas.price");
+
             await this.checkAndTryConnection();
             const txCount = await this.web3!.eth.getTransactionCount(_signer.address);
             let value = this.web3.utils.numberToHex(this.web3!.utils.toWei(amount, 'ether'));
@@ -157,8 +160,8 @@ export class EthereumService implements OnModuleInit {
                 nonce: this.web3.utils.numberToHex(txCount),
                 to: to,
                 value : value,
-                gasLimit: this.web3.utils.numberToHex(100000),
-                gasPrice: this.web3.utils.numberToHex(this.web3!.utils.toWei('11', 'gwei')),
+                gasLimit: this.web3.utils.numberToHex(gasLimit.toNumber()),
+                gasPrice: this.web3.utils.numberToHex(this.web3!.utils.toWei(gasPrice.toString(), 'gwei')),
                 chainId: this.settings.chainId
 
             };

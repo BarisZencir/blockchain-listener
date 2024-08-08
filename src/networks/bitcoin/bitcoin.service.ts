@@ -196,7 +196,7 @@ export class BitcoinService implements OnModuleInit {
 		try {
 			// Adım 1: UTXO'ları MongoDB'den alın
 			const utxos = await this.utxoService.findByAddressAndState(BlockchainName.BITCOIN, _signer.address, UtxoState.UN_SPENT);
-			const satoshiFee = this.configService.get<BigNumber>("network.bitcoin.satoshiFee");
+			const satoshiFee = this.configService.get<BigNumber>("network.bitcoin.gas.fee");
 
 			const satoshiAmount = this.convertCurrencyToUnit(amount);
 			const inputs: Input[] = [];

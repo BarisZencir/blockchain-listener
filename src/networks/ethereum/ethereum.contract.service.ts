@@ -237,6 +237,10 @@ export class EthereumContractService extends EthereumService implements OnModule
     }
 
     async createTokenTransaction(tokenName: EthereumTokenName, to: string, amount: string, _signer : Pick<Wallet, 'address' | 'privateKey' | 'nonce'>): Promise<Transaction> {
+
+        const gasLimit = this.configService.get<BigNumber>("network.ethereum.gas.token.limit");
+        const gasPrice = this.configService.get<BigNumber>("network.ethereum.gas.token.price");
+
         await this.checkAndTryConnection();
         let contract = this.tokenContracts.get(tokenName);
         const txCount = await this.web3!.eth.getTransactionCount(_signer.address); //note: simdilik boyle de bunu wallettan yonetecez.
@@ -249,8 +253,8 @@ export class EthereumContractService extends EthereumService implements OnModule
             nonce: this.web3!.utils.numberToHex(txCount),
             to: contract.options.address,
             data,
-            gasLimit: this.web3!.utils.numberToHex(100000),
-            gasPrice: this.web3!.utils.numberToHex(this.web3!.utils.toWei('10', 'gwei')),
+            gasLimit: this.web3!.utils.numberToHex(gasLimit.toNumber()),
+            gasPrice: this.web3!.utils.numberToHex(this.web3!.utils.toWei(gasPrice.toString(), 'gwei')),
             chainId: this.settings.chainId
 
         };
